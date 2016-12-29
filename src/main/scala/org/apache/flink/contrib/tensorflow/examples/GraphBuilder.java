@@ -50,13 +50,12 @@ public class GraphBuilder implements AutoCloseable {
 	}
 
 	public Output constant(String name, Object value) {
-		try (Tensor t = Tensor.create(value)) {
-			return g.opBuilder("Const", name)
-				.setAttr("dtype", t.dataType())
-				.setAttr("value", t)
-				.build()
-				.output(0);
-		}
+		Tensor t = Tensor.create(value);
+		return g.opBuilder("Const", name)
+			.setAttr("dtype", t.dataType())
+			.setAttr("value", t)
+			.build()
+			.output(0);
 	}
 
 	Output variable(String name, DataType dtype, TensorShapeProto shape) {

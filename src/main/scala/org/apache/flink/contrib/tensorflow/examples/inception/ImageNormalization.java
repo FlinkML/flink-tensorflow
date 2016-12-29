@@ -1,5 +1,6 @@
 package org.apache.flink.contrib.tensorflow.examples.inception;
 
+import org.apache.flink.contrib.tensorflow.common.TensorValue;
 import org.apache.flink.contrib.tensorflow.examples.GraphBuilder;
 import org.apache.flink.contrib.tensorflow.streaming.functions.RichGraphFunction;
 import org.apache.flink.util.Collector;
@@ -11,7 +12,6 @@ import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 import org.tensorflow.framework.GraphDef;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,7 +19,7 @@ import java.util.List;
  * <p>
  * The output is compatible with inception5h.
  */
-public class ImageNormalization extends RichGraphFunction<byte[], byte[]> {
+public class ImageNormalization extends RichGraphFunction<byte[], TensorValue> {
 
 	protected static final Logger LOG = LoggerFactory.getLogger(ImageNormalization.class);
 
@@ -68,9 +68,9 @@ public class ImageNormalization extends RichGraphFunction<byte[], byte[]> {
 	}
 
 	@Override
-	public void processElement(byte[] value, Context ctx, Collector<byte[]> out) throws Exception {
+	public void processElement(byte[] value, Context ctx, Collector<TensorValue> out) throws Exception {
 
-		// convert the input element
+		// convert the input element to a tensor
 		Tensor inputTensor = Tensor.create(value);
 
 		// define the command to fetch the output tensor
@@ -83,18 +83,13 @@ public class ImageNormalization extends RichGraphFunction<byte[], byte[]> {
 		if (outputTensors.size() != 1) {
 			throw new IllegalStateException("fetch failed to produce a tensor");
 		}
-		Tensor outputTensor = outputTensors.get(0);
-		float[][][][] outputValue = new float
-			[(int) outputTensor.shape()[0]]
-			[(int) outputTensor.shape()[1]]
-			[(int) outputTensor.shape()[2]]
-			[(int) outputTensor.shape()[3]];
-		outputTensors.get(0).copyTo(outputValue);
-		LOG.info("normalized an image ({})", Arrays.toString(outputTensor.shape()));
+		TensorValue outputTensor = TensorValue.fromTensor(outputTensors.get(0));
+		LOG.info("ImageNormalization(byte[{}]) => {}", value.length, outputTensor);
+
+		out.collect(outputTensor);
 	}
 
 	@Override
-	public void onTimer(long timestamp, OnTimerContext ctx, Collector<byte[]> out) throws Exception {
-
+	public void onTimer(long timestamp, OnTimerContext ctx, Collector<TensorValue> out) throws Exception {
 	}
 }
