@@ -1,4 +1,4 @@
-package org.apache.flink.contrib.tensorflow.examples;
+package org.apache.flink.contrib.tensorflow.examples.common;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.tensorflow.DataType;

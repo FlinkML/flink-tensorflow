@@ -1,7 +1,7 @@
 package org.apache.flink.contrib.tensorflow.examples.inception;
 
 import org.apache.flink.contrib.tensorflow.common.TensorValue;
-import org.apache.flink.contrib.tensorflow.examples.GraphBuilder;
+import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder;
 import org.apache.flink.contrib.tensorflow.streaming.functions.RichGraphFunction;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
