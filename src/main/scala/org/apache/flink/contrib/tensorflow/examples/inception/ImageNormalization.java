@@ -1,35 +1,69 @@
 package org.apache.flink.contrib.tensorflow.examples.inception;
 
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.typeutils.base.LongSerializer;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.contrib.tensorflow.common.GraphSerializer;
 import org.apache.flink.contrib.tensorflow.common.TensorValue;
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder;
+import org.apache.flink.contrib.tensorflow.streaming.functions.DefaultGraphInitializer;
+import org.apache.flink.contrib.tensorflow.streaming.functions.GraphInitializer;
 import org.apache.flink.contrib.tensorflow.streaming.functions.RichGraphFunction;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
+import org.apache.flink.streaming.api.functions.RichProcessFunction;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tensorflow.DataType;
-import org.tensorflow.Output;
-import org.tensorflow.Session;
-import org.tensorflow.Tensor;
+import org.tensorflow.*;
 import org.tensorflow.framework.GraphDef;
 
 import java.util.List;
 
 /**
- * Normalize a JPEG image.
- * <p>
- * The output is compatible with inception5h.
+ * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
+ *
+ * <p>The output is compatible with inception5h.
  */
-public class ImageNormalization extends RichGraphFunction<byte[], TensorValue> {
-
+public class ImageNormalization extends RichMapFunction<byte[], TensorValue>
+{
 	protected static final Logger LOG = LoggerFactory.getLogger(ImageNormalization.class);
+
+	private transient Session session;
+
+	// the image processing graph
+	private transient Graph graph;
+	private transient String inputName;
+	private transient String outputName;
 
 	//	private final static byte[][] INPUT_IMAGE_TEMPLATE = new byte[600][800];
 	private final static byte[] INPUT_IMAGE_TEMPLATE = new byte[86412];
 
-	private String inputName;
-	private String outputName;
+	@Override
+	public void open(Configuration parameters) throws Exception {
+		super.open(parameters);
+		try {
+			openGraph();
 
-	public GraphDef buildGraph() {
+			session = new Session(graph);
+		}
+		catch(RuntimeException e) {
+			if(session != null) {
+				session.close();
+				session = null;
+			}
+			if(graph != null) {
+				graph.close();
+				graph = null;
+			}
+			throw e;
+		}
+	}
+
+	private void openGraph() {
 		try (GraphBuilder b = new GraphBuilder()) {
 			// Some constants specific to the pre-trained model at:
 			// https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
@@ -60,21 +94,24 @@ public class ImageNormalization extends RichGraphFunction<byte[], TensorValue> {
 					b.constant("scale", scale));
 
 			outputName = output.op().name();
-
-			GraphDef graphDef = b.build();
-
-			return graphDef;
+			graph = b.build();
 		}
 	}
 
 	@Override
-	public void processElement(byte[] value, Context ctx, Collector<TensorValue> out) throws Exception {
+	public void close() throws Exception {
+		session.close();
+		graph.close();
+		super.close();
+	}
 
+	@Override
+	public TensorValue map(byte[] value) throws Exception {
 		// convert the input element to a tensor
 		Tensor inputTensor = Tensor.create(value);
 
 		// define the command to fetch the output tensor
-		Session.Runner command = ctx.session().runner()
+		Session.Runner command = session.runner()
 			.feed(inputName, inputTensor)
 			.fetch(outputName);
 
@@ -83,13 +120,9 @@ public class ImageNormalization extends RichGraphFunction<byte[], TensorValue> {
 		if (outputTensors.size() != 1) {
 			throw new IllegalStateException("fetch failed to produce a tensor");
 		}
+
 		TensorValue outputTensor = TensorValue.fromTensor(outputTensors.get(0));
 		LOG.info("ImageNormalization(byte[{}]) => {}", value.length, outputTensor);
-
-		out.collect(outputTensor);
-	}
-
-	@Override
-	public void onTimer(long timestamp, OnTimerContext ctx, Collector<TensorValue> out) throws Exception {
+		return outputTensor;
 	}
 }

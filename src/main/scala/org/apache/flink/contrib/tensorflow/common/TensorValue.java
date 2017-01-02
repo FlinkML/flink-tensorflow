@@ -270,7 +270,7 @@ public final class TensorValue implements CopyableValue<TensorValue>
 			return new TensorValue(dataType, shape, buffer);
 		}
 		finally {
-			t.unref();
+//			t.unref();
 		}
 	}
 }

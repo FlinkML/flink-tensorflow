@@ -1,6 +1,6 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
-import java.nio.file.{FileSystems, Files}
+import java.nio.file.{FileSystems, Files, Path}
 
 import org.apache.flink.contrib.tensorflow.streaming.scala._
 import org.apache.flink.streaming.api.scala._
@@ -9,6 +9,7 @@ import org.apache.flink.streaming.api.scala._
   * A streaming image labeler, based on the 'inception5h' model.
   */
 object Inception {
+
   def main(args: Array[String]) {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
 
@@ -16,23 +17,18 @@ object Inception {
       System.out.println("Usage: Inception <model-dir> <image-path...>")
       System.exit(1)
     }
+
     val modelPath: String = args.toSeq.head
     val images: Seq[Array[Byte]] = args.toSeq.tail.map(readImage)
-    val imageStream = env.fromCollection(images)
 
-    val imageNormalization = new ImageNormalization()
-    val normalizedStream = imageStream
-      .flow()
-      .withGraph(imageNormalization.buildGraph())
-      .process(imageNormalization)
+    val imageStream = env
+      .fromCollection(images)
+      .map(new ImageNormalization())
 
-    val inception = new InceptionModel(modelPath)
-    val inferenceStream = normalizedStream
-      .flow()
-      .withGraph(inception.buildGraph)
-      .process(inception)
+    val labelStream = imageStream
+      .map(new InceptionModel(modelPath))
 
-    inferenceStream.print()
+    labelStream.print()
 
     // execute program
     env.execute("Inception")

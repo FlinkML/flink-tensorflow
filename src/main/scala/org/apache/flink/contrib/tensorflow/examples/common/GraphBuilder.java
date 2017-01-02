@@ -11,7 +11,7 @@ import org.tensorflow.framework.TensorShapeProto;
 /**
  */
 public class GraphBuilder implements AutoCloseable {
-	private final Graph g;
+	private Graph g;
 
 	public static GraphBuilder newBuilder() {
 		return new GraphBuilder();
@@ -19,6 +19,10 @@ public class GraphBuilder implements AutoCloseable {
 
 	public GraphBuilder() {
 		this.g = new Graph();
+	}
+
+	public GraphBuilder(Graph graph) {
+		this.g = graph;
 	}
 
 	public Output div(Output x, Output y) {
@@ -104,18 +108,26 @@ public class GraphBuilder implements AutoCloseable {
 		return g.opBuilder(type, type).addInput(in1).addInput(in2).build().output(0);
 	}
 
-	public GraphDef build() {
-		try {
-			GraphDef def = GraphDef.parseFrom(g.toGraphDef());
-			return def;
-		} catch (InvalidProtocolBufferException e) {
-			throw new RuntimeException("unable to parse graphdef from libtensorflow", e);
-		}
-
+	public Graph build() {
+		Graph built = g;
+		g = null;
+		return built;
 	}
-
+//
+//	@Deprecated
+//	public GraphDef buildAsDef() {
+//		try {
+//			GraphDef def = GraphDef.parseFrom(g.toGraphDef());
+//			return def;
+//		} catch (InvalidProtocolBufferException e) {
+//			throw new RuntimeException("unable to parse graphdef from libtensorflow", e);
+//		}
+//	}
+//
 	@Override
 	public void close() {
-		g.close();
+		if(g !=null) {
+			g.close();
+		}
 	}
 }
