@@ -1,25 +1,13 @@
 package org.apache.flink.contrib.tensorflow.examples.inception;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
-import org.apache.flink.api.common.typeutils.base.LongSerializer;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.contrib.tensorflow.common.GraphSerializer;
 import org.apache.flink.contrib.tensorflow.common.TensorValue;
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder;
-import org.apache.flink.contrib.tensorflow.streaming.functions.DefaultGraphInitializer;
-import org.apache.flink.contrib.tensorflow.streaming.functions.GraphInitializer;
-import org.apache.flink.contrib.tensorflow.streaming.functions.RichGraphFunction;
-import org.apache.flink.runtime.state.FunctionInitializationContext;
-import org.apache.flink.runtime.state.FunctionSnapshotContext;
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.streaming.api.functions.RichProcessFunction;
-import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tensorflow.*;
-import org.tensorflow.framework.GraphDef;
 
 import java.util.List;
 
@@ -28,7 +16,7 @@ import java.util.List;
  *
  * <p>The output is compatible with inception5h.
  */
-public class ImageNormalization extends RichMapFunction<byte[], TensorValue>
+public class ImageNormalization extends RichMapFunction<Tuple2<String, byte[]>, Tuple2<String, TensorValue>>
 {
 	protected static final Logger LOG = LoggerFactory.getLogger(ImageNormalization.class);
 
@@ -106,13 +94,19 @@ public class ImageNormalization extends RichMapFunction<byte[], TensorValue>
 	}
 
 	@Override
-	public TensorValue map(byte[] value) throws Exception {
+	public Tuple2<String,TensorValue> map(Tuple2<String,byte[]> value) throws Exception {
+		TensorValue outputTensor = processImage(value.f1);
+		LOG.info("ImageNormalization({}) => {}", value.f0, outputTensor);
+		return new Tuple2<>(value.f0, outputTensor);
+	}
+
+	private TensorValue processImage(byte[] imageBytes) {
 		// convert the input element to a tensor
-		Tensor inputTensor = Tensor.create(value);
+		Tensor input = Tensor.create(imageBytes);
 
 		// define the command to fetch the output tensor
 		Session.Runner command = session.runner()
-			.feed(inputName, inputTensor)
+			.feed(inputName, input)
 			.fetch(outputName);
 
 		// run the command
@@ -120,9 +114,6 @@ public class ImageNormalization extends RichMapFunction<byte[], TensorValue>
 		if (outputTensors.size() != 1) {
 			throw new IllegalStateException("fetch failed to produce a tensor");
 		}
-
-		TensorValue outputTensor = TensorValue.fromTensor(outputTensors.get(0));
-		LOG.info("ImageNormalization(byte[{}]) => {}", value.length, outputTensor);
-		return outputTensor;
+		return TensorValue.fromTensor(outputTensors.get(0));
 	}
 }

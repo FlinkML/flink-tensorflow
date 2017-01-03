@@ -10,6 +10,7 @@ import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow.{Graph, Session}
+import org.apache.flink.api.java.tuple.{Tuple2=>FlinkTuple2}
 
 import scala.collection.JavaConverters._
 
@@ -19,7 +20,7 @@ import scala.collection.JavaConverters._
   * @param modelPath the directory containing the model files.
   */
 class InceptionModel(modelPath: String)
-  extends RichMapFunction[TensorValue,Inference] {
+  extends RichMapFunction[FlinkTuple2[String,TensorValue],Inference] {
 
   protected val LOG: Logger = LoggerFactory.getLogger(classOf[InceptionModel])
 
@@ -45,8 +46,8 @@ class InceptionModel(modelPath: String)
   }
 
 
-  override def map(value: TensorValue): Inference = {
-    val cmd = session.runner().feed("input", value.toTensor).fetch("output")
+  override def map(input: FlinkTuple2[String,TensorValue]): Inference = {
+    val cmd = session.runner().feed("input", input.f1.toTensor).fetch("output")
     val result = cmd.run().get(0)
 
     val rshape = result.shape
@@ -56,15 +57,15 @@ class InceptionModel(modelPath: String)
     val inferenceMatrix = Array.ofDim[Float](1,nlabels)
     result.copyTo(inferenceMatrix)
 
-    val inference = toInference(inferenceMatrix)
-    LOG.info(s"LabelImage($value) => $inference")
+    val inference = toInference(input.f0, inferenceMatrix)
+    LOG.info(s"LabelImage($input) => $inference")
     inference
   }
 
-  private def toInference(inferenceMatrix: Array[Array[Float]]): Inference = {
-    Inference(inferenceMatrix(0).toList.zip(labels).sortWith(_._1 > _._1).take(5))
+  private def toInference(imageName: String, inferenceMatrix: Array[Array[Float]]): Inference = {
+    Inference(imageName, inferenceMatrix(0).toList.zip(labels).sortWith(_._1 > _._1).take(5))
   }
 }
 
-case class Inference(inferences: List[(Float,String)])
+case class Inference(imageName: String, inferences: List[(Float,String)])
 
