@@ -28,7 +28,7 @@ public class GraphUtils {
 	 * @throws IOException if the path could not be read.
 	 * @throws IllegalArgumentException if the graph could not be imported.
 	 */
-	public static Graph importFromPath(Path path) throws IOException {
+	public static Graph importFromPath(Path path, String prefix) throws IOException {
 		FileSystem fs = path.getFileSystem();
 		FileStatus status = fs.getFileStatus(path);
 		byte[] graphBytes = new byte[(int) status.getLen()];
@@ -36,7 +36,7 @@ public class GraphUtils {
 			IOUtils.readFully(in, graphBytes, 0, (int) status.getLen());
 		}
 		Graph graph = new Graph();
-		graph.importGraphDef(graphBytes);
+		graph.importGraphDef(graphBytes, prefix);
 		return graph;
 	}
 

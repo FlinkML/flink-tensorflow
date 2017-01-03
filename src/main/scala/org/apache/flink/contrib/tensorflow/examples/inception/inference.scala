@@ -33,7 +33,7 @@ class InceptionModel(modelPath: String)
     labels = GraphUtils.readAllLines(
       new Path(modelPath, "imagenet_comp_graph_label_strings.txt"), StandardCharsets.UTF_8).asScala.toList
     graph = GraphUtils.importFromPath(
-      new Path(modelPath, "tensorflow_inception_graph.pb"))
+      new Path(modelPath, "tensorflow_inception_graph.pb"), "inception")
 
     session = new Session(graph)
   }
@@ -47,7 +47,7 @@ class InceptionModel(modelPath: String)
 
 
   override def map(input: FlinkTuple2[String,TensorValue]): Inference = {
-    val cmd = session.runner().feed("input", input.f1.toTensor).fetch("output")
+    val cmd = session.runner().feed("inception/input", input.f1.toTensor).fetch("inception/output")
     val result = cmd.run().get(0)
 
     val rshape = result.shape
