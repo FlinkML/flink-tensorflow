@@ -3,7 +3,7 @@ package org.apache.flink.contrib.tensorflow.examples.inception;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.contrib.tensorflow.common.TensorValue;
+import org.apache.flink.contrib.tensorflow.types.TensorValue;
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

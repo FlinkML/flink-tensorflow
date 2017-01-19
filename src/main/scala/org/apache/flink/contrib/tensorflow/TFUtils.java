@@ -29,4 +29,17 @@ public class TFUtils {
 			default: throw new IllegalArgumentException("value");
 		}
 	}
+
+	public static long[] squeeze(long[] shape) {
+		int remaining = 0;
+		for(int i = 0; i < shape.length; i++) {
+			if(shape[i] != 1) remaining++;
+		}
+		long[] squeezed = new long[remaining];
+		int j = 0;
+		for(int i = 0; i < shape.length; i++) {
+			if(shape[i] != 1) squeezed[j++] = shape[i];
+		}
+		return squeezed;
+	}
 }

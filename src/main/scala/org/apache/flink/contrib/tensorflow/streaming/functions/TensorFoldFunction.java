@@ -2,7 +2,7 @@ package org.apache.flink.contrib.tensorflow.streaming.functions;
 
 import org.apache.flink.api.common.functions.FoldFunction;
 import org.apache.flink.api.common.functions.RichFoldFunction;
-import org.apache.flink.contrib.tensorflow.common.TensorValue;
+import org.apache.flink.contrib.tensorflow.types.TensorValue;
 
 /**
  * A {@link FoldFunction} for folding tensor values.

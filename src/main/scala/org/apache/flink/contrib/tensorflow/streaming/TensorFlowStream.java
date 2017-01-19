@@ -41,10 +41,6 @@ public class TensorFlowStream<T> {
 		return inputStream.getExecutionEnvironment();
 	}
 
-	public TensorFlowStream<T> withOptions(SessionOptions options) {
-		return this;
-	}
-
 	public TensorFlowStream<T> withGraphDef(GraphDef graphDef) {
 		this.graphDef = graphDef;
 		return this;

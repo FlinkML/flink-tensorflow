@@ -5,12 +5,12 @@ import java.util
 
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.configuration.Configuration
-import org.apache.flink.contrib.tensorflow.common.TensorValue
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow.{Graph, Session}
-import org.apache.flink.api.java.tuple.{Tuple2=>FlinkTuple2}
+import org.apache.flink.api.java.tuple.{Tuple2 => FlinkTuple2}
+import org.apache.flink.contrib.tensorflow.types.TensorValue
 
 import scala.collection.JavaConverters._
 

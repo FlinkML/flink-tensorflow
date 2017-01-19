@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.contrib.tensorflow.common;
+package org.apache.flink.contrib.tensorflow.types;
 
 import org.apache.flink.annotation.Public;
 import org.apache.flink.contrib.tensorflow.TFUtils;
@@ -258,14 +258,14 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	/**
 	 * Construct a {@link TensorValue} from a {@link Tensor}.
 	 *
-	 * <p>Decrements the reference count on {@code t}.
+	 * <p>This method does not take ownership of the tensor.
 	 */
 	public static TensorValue fromTensor(Tensor t) {
 		try {
 			DataType dataType = t.dataType();
 			TensorShapeProto shape = convertShape(t.shape());
-			ByteBuffer buffer = ByteBuffer.allocate(t.getDataByteSize()).order(ByteOrder.nativeOrder());
-			t.readData(buffer);
+			ByteBuffer buffer = ByteBuffer.allocate(t.byteSize()).order(ByteOrder.nativeOrder());
+			t.writeTo(buffer);
 			buffer.rewind();
 			return new TensorValue(dataType, shape, buffer);
 		}

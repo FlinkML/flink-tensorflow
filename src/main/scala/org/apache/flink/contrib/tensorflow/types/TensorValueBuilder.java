@@ -1,4 +1,4 @@
-package org.apache.flink.contrib.tensorflow.common;
+package org.apache.flink.contrib.tensorflow.types;
 
 import org.tensorflow.DataType;
 import org.tensorflow.framework.TensorShapeProto;

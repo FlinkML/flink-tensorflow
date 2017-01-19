@@ -9,6 +9,7 @@ import java.io.IOException;
 
 /**
  */
+@Deprecated
 public class GraphSerializer extends TypeSerializer<Graph> {
 
 	public static final GraphSerializer INSTANCE = new GraphSerializer();
