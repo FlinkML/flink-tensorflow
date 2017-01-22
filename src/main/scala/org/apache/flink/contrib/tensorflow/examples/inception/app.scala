@@ -1,19 +1,17 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
-import java.nio.file.{FileSystems, Files, Path}
+import java.nio.file.{FileSystems, Files}
 
-import org.apache.flink.contrib.tensorflow.streaming.scala._
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.api.java.tuple.{Tuple2 => FlinkTuple2}
-import org.apache.flink.contrib.tensorflow.common.functions.AbstractMapFunction
-import org.apache.flink.contrib.tensorflow.models.Model
-import org.apache.flink.contrib.tensorflow.types.TensorValue
+import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.contrib.tensorflow.streaming._
+import org.apache.flink.streaming.api.scala._
 
 /**
   * A streaming image labeler, based on the 'inception5h' model.
   */
 object Inception {
+
+  type Image = Array[Byte]
 
   def main(args: Array[String]) {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
@@ -29,13 +27,9 @@ object Inception {
 
     val imageStream = env
       .fromCollection(images)
-      .map(new AbstractMapFunction[FlinkTuple2[String,Array[Byte]],FlinkTuple2[String,TensorValue]] {
-        override def model: Model[_] = normalizationModel
-        override def map(value: FlinkTuple2[String, Array[Byte]]): FlinkTuple2[String, TensorValue] = {
-          val output = normalizationModel.run(Seq(value.f1))(normalizationModel.normalize)
-          new FlinkTuple2(value.f0, output)
-        }
-      })
+      .mapWithModel(normalizationModel) { (in, model) =>
+        (in._1, model.run(Seq(in._2))(model.normalize))
+      }
 
     imageStream.print()
 //
@@ -48,7 +42,7 @@ object Inception {
     env.execute("Inception")
   }
 
-  def readImage(localPath: String): FlinkTuple2[String,Array[Byte]] = {
-    new FlinkTuple2(localPath, Files.readAllBytes(FileSystems.getDefault().getPath(localPath)))
+  def readImage(localPath: String): (String,Image) = {
+   (localPath, Files.readAllBytes(FileSystems.getDefault.getPath(localPath)))
   }
 }

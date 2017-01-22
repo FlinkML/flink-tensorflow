@@ -59,6 +59,9 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
     }
   }
 
+  /**
+    * Normalizes an image to a 4D tensor value.
+    */
   def normalize: NormalizationSignature[ImageNormalization] = signature
 }
 

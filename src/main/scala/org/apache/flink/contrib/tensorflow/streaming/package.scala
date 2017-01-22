@@ -16,9 +16,12 @@ package object streaming {
   implicit class RichDataStream[T: TypeInformation : ClassTag](stream: DataStream[T]) {
 
     /**
-      * Creates a new DataStream by applying the given function to every element of this DataStream.
+      * Creates a new DataStream by applying the given function to evey element of this
+      * DataStream using the associated model.
+      *
+      * Supports models that implement [[org.apache.flink.contrib.tensorflow.models.RichModel]].
       */
-    def mapWithModel[R: TypeInformation](fun: T => R)(implicit model: Model[_]): DataStream[R] = {
+    def mapWithModel[M <: Model[M],R: TypeInformation](model: M)(fun: (T,M) => R): DataStream[R] = {
       if (fun == null) {
         throw new NullPointerException("Map function must not be null.")
       }
@@ -26,7 +29,7 @@ package object streaming {
       val cleanFun = clean(fun)
       val mapper = new AbstractMapFunction[T, R] {
         def model = m
-        def map(in: T): R = cleanFun(in)
+        def map(in: T): R = cleanFun(in, m)
       }
       stream.map(mapper)
     }

@@ -45,7 +45,6 @@ trait TensorFlowModel[Self <: TensorFlowModel[Self]]
     checkState(bundle != null)
     val context = new Model.RunContext {
       override def graph: Graph = bundle.graph()
-
       override def session: Session = bundle.session()
     }
     op.run(that, context, input)
