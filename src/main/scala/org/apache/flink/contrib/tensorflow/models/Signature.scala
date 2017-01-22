@@ -16,8 +16,6 @@ import scala.annotation.implicitNotFound
   * @tparam IN   Type of the input data
   */
 @implicitNotFound(msg = "Cannot find Signature type class for model ${Self} and input ${IN}")
-trait Signature[Self, IN] extends Serializable {
-  type OUT
-
+trait Signature[Self, IN, OUT] extends Serializable {
   def run(instance: Self, context: RunContext, input: IN): OUT
 }

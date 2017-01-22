@@ -66,11 +66,10 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
 }
 
 @SerialVersionUID(1L)
-class NormalizationSignature[M](inputName: String, outputName: String) extends Signature[M,Seq[Image]] {
-  type IN = Seq[Image]
-  type OUT = TensorValue
+class NormalizationSignature[M](inputName: String, outputName: String)
+  extends Signature[M,Seq[Image],TensorValue] {
 
-  override def run(model: M, context: RunContext, input: Seq[Image]): OUT = {
+  override def run(model: M, context: RunContext, input: Seq[Image]): TensorValue = {
 
     // convert the input element to a tensor
     val i: Tensor = input.as[Tensor]

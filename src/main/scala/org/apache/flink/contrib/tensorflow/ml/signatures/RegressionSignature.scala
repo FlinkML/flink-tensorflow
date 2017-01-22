@@ -1,6 +1,7 @@
 package org.apache.flink.contrib.tensorflow.ml.signatures
 
 import com.twitter.bijection.Conversion._
+import com.twitter.bijection.{Conversion, Convert}
 import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionSignature.RegressionOutputs
 import org.apache.flink.contrib.tensorflow.models.Model.RunContext
 import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
@@ -11,6 +12,7 @@ import org.tensorflow.example.Example
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._
+import org.apache.flink.contrib.tensorflow.types.ExampleBuilder._
 
 /**
   * The standard regression method.
@@ -20,9 +22,8 @@ import scala.collection.JavaConverters._
   * @param signatureDef the 'regress' signaturedef to bind to.
   */
 @SerialVersionUID(1L)
-class RegressionSignature[M](signatureDef: SignatureDef) extends Signature[M,Seq[Example]] {
-  type IN = Seq[Example]
-  type OUT = RegressionOutputs
+class RegressionSignature[M](signatureDef: SignatureDef)
+  extends Signature[M, Seq[Example], RegressionOutputs] {
 
   require(signatureDef.getMethodName == REGRESS_METHOD_NAME)
 
@@ -44,14 +45,36 @@ class RegressionSignature[M](signatureDef: SignatureDef) extends Signature[M,Seq
   }
 }
 
+@SerialVersionUID(1L)
+@Deprecated // experimental
+class RegressionSignatureWithFloat[M](signatureDef: SignatureDef)
+  extends Signature[M, Float, Float] {
+
+  require(signatureDef.getMethodName == REGRESS_METHOD_NAME)
+
+  override def run(model: M, context: RunContext, input: Float): Float = {
+    val c = new ModelComputation(signatureDef)
+
+    // convert the list of examples to a tensor of DataType.STRING
+    val i: Tensor = example("x" -> feature(input)).as[Tensor]
+    val result = c.run(context.session, Map(REGRESS_INPUTS -> i).asJava)
+    try {
+      // convert the tensor to a Array[Float]
+      val o = result.outputs().get(REGRESS_OUTPUTS)
+      val outputs: Array[Float] = o.as[Option[Array[Float]]].get
+      outputs.head
+    }
+    finally {
+      result.close()
+    }
+  }
+}
+
+
 object RegressionSignature {
   case class RegressionOutputs(output: Array[Float])
 
-  @Deprecated
-  def signatureDef(): SignatureDef = SignatureDef.newBuilder()
-    .putInputs(REGRESS_INPUTS, TensorInfo.newBuilder().setName("tf_example:0").build())
-    .putOutputs(REGRESS_OUTPUTS, TensorInfo.newBuilder().setName("Identity:0").build())
-    .setMethodName(REGRESS_METHOD_NAME)
-    .build()
+  type ToExample[T] = Conversion[T,Example]
+  type OutputTensorLike[T] = Conversion[Tensor,Option[T]]
 }
 

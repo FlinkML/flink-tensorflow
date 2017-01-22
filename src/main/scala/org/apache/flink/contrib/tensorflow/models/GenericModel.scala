@@ -43,7 +43,7 @@ abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] 
     }
   }
 
-  override def run[IN](input: IN)(implicit method: Signature[Self, IN]): method.OUT = {
+  override def run[IN,OUT](input: IN)(implicit method: Signature[Self, IN, OUT]): OUT = {
     checkState(session != null)
     val context = new Model.RunContext {
       override def graph: Graph = that.graph

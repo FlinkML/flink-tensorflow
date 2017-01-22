@@ -23,7 +23,7 @@ trait Model[Self] extends Serializable {
     * @param method the method to apply.
     * @return the result of applying the method.
     */
-  def run[IN](input: IN)(implicit method: Signature[Self, IN]): method.OUT
+  def run[IN,OUT](input: IN)(implicit method: Signature[Self, IN, OUT]): OUT
 }
 
 object Model {

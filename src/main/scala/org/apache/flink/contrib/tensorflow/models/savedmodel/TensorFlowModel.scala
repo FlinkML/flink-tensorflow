@@ -41,7 +41,7 @@ trait TensorFlowModel[Self <: TensorFlowModel[Self]]
     bundle = loader.load()
   }
 
-  override def run[IN](input: IN)(implicit op: Signature[Self, IN]): op.OUT = {
+  override def run[IN,OUT](input: IN)(implicit op: Signature[Self, IN, OUT]): OUT = {
     checkState(bundle != null)
     val context = new Model.RunContext {
       override def graph: Graph = bundle.graph()
