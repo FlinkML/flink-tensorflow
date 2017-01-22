@@ -60,6 +60,12 @@ trait TensorFlowModel[Self <: TensorFlowModel[Self]]
 }
 
 object TensorFlowModel {
+  /**
+    * Produces a saved-model loader for the model at the provided location.
+    * @param modelPath the saved-model directory
+    * @param tags the tags identifying the specific metagraph to load
+    * @return a loader
+    */
   def load(modelPath: Path, tags: Set[String]): SavedModelLoader =
     new DefaultSavedModelLoader(modelPath, tags)
 }

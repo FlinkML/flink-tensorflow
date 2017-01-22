@@ -1,6 +1,7 @@
 package org.apache.flink.contrib.tensorflow.examples.common;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.flink.contrib.tensorflow.streaming.functions.GraphInitializer;
 import org.tensorflow.DataType;
 import org.tensorflow.Graph;
 import org.tensorflow.Output;
@@ -54,12 +55,13 @@ public class GraphBuilder implements AutoCloseable {
 	}
 
 	public Output constant(String name, Object value) {
-		Tensor t = Tensor.create(value);
-		return g.opBuilder("Const", name)
-			.setAttr("dtype", t.dataType())
-			.setAttr("value", t)
-			.build()
-			.output(0);
+		try(Tensor t = Tensor.create(value)) {
+			return g.opBuilder("Const", name)
+				.setAttr("dtype", t.dataType())
+				.setAttr("value", t)
+				.build()
+				.output(0);
+		}
 	}
 
 	Output variable(String name, DataType dtype, TensorShapeProto shape) {
@@ -113,21 +115,26 @@ public class GraphBuilder implements AutoCloseable {
 		g = null;
 		return built;
 	}
-//
-//	@Deprecated
-//	public GraphDef buildAsDef() {
-//		try {
-//			GraphDef def = GraphDef.parseFrom(g.toGraphDef());
-//			return def;
-//		} catch (InvalidProtocolBufferException e) {
-//			throw new RuntimeException("unable to parse graphdef from libtensorflow", e);
-//		}
-//	}
-//
+
+	public GraphDef buildGraphDef() {
+		try {
+			GraphDef def = GraphDef.parseFrom(g.toGraphDef());
+			return def;
+		} catch (InvalidProtocolBufferException e) {
+			throw new RuntimeException("unable to parse graphdef from libtensorflow", e);
+		}
+	}
+
 	@Override
 	public void close() {
 		if(g !=null) {
 			g.close();
 		}
+	}
+
+	public static Graph fromGraphDef(GraphDef graphDef) {
+		Graph g = new Graph();
+		g.importGraphDef(graphDef.toByteArray());
+		return g;
 	}
 }

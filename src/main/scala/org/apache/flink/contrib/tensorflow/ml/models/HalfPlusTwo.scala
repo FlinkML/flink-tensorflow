@@ -9,12 +9,10 @@ import org.apache.flink.core.fs.Path
  *
   * @param modelPath path to the saved model data.
   */
+@SerialVersionUID(1L)
 class HalfPlusTwo(modelPath: Path) extends TensorFlowModel[HalfPlusTwo] {
   import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
   import TensorFlowModel._
-
-//  override protected def loader: SavedModelLoader =
-//    new DefaultSavedModelLoader(modelPath, Set("serve"))
 
   override protected def loader = load(modelPath, Set("serve"))
 

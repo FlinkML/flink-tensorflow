@@ -1,0 +1,16 @@
+package org.apache.flink.contrib.tensorflow.streaming.functions
+
+import org.apache.flink.contrib.tensorflow.common.functions.util.ModelSupport
+import org.apache.flink.contrib.tensorflow.streaming.functions.util.StreamingModelSupport
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
+import org.apache.flink.streaming.api.functions.co.RichCoProcessFunction
+
+/**
+  * @author Eron Wright
+  */
+abstract class AbstractCoProcessFunction[IN1, IN2, OUT] extends RichCoProcessFunction[IN1, IN2, OUT]
+  with CheckpointedFunction
+  with ModelSupport
+  with StreamingModelSupport {
+
+}
