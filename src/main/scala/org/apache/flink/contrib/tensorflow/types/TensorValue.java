@@ -130,6 +130,23 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	}
 
 	/**
+	 * Removes dimensions of size 1 from the shape of this tensor.
+	 */
+	public TensorValue squeeze(int[] axis) {
+		int remaining = shape.getDimCount() - axis.length;
+		TensorShapeProto.Builder b = TensorShapeProto.newBuilder(shape);
+		for(int i = 0; i < axis.length; i++) {
+			int dim = axis[i];
+			long size = b.getDim(dim).getSize();
+			if(size != 1) {
+				throw new IllegalArgumentException("unable to remove dimension " + dim + " with size " + size);
+			}
+			b.removeDim(dim);
+		}
+		return new TensorValue(dataType, b.build(), buffer);
+	}
+
+	/**
 	 * Creates a tensor based on this value.
 	 *
 	 * @return a tensor with a reference count of one.

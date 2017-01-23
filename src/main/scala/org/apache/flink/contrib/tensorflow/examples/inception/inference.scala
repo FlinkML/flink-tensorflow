@@ -1,16 +1,19 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
+import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.util
+import java.util.{List => JavaList}
 
-import org.apache.flink.api.common.functions.RichMapFunction
-import org.apache.flink.configuration.Configuration
+import com.twitter.bijection.Conversion._
+import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
+import org.apache.flink.contrib.tensorflow.models.Model.RunContext
+import org.apache.flink.contrib.tensorflow.models.Signature
+import org.apache.flink.contrib.tensorflow.models.generic.{DefaultGraphLoader, GenericModel, GraphLoader}
+import org.apache.flink.contrib.tensorflow.types.TensorInjections._
+import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
-import org.tensorflow.{Graph, Session}
-import org.apache.flink.api.java.tuple.{Tuple2 => FlinkTuple2}
-import org.apache.flink.contrib.tensorflow.types.TensorValue
 
 import scala.collection.JavaConverters._
 
@@ -19,53 +22,82 @@ import scala.collection.JavaConverters._
   *
   * @param modelPath the directory containing the model files.
   */
-class InceptionModel(modelPath: String)
-  extends RichMapFunction[FlinkTuple2[String,TensorValue],Inference] {
+@SerialVersionUID(1L)
+class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
 
   protected val LOG: Logger = LoggerFactory.getLogger(classOf[InceptionModel])
 
-  @transient var labels: List[String] = _
-  @transient var graph: Graph = _
-  @transient var session: Session = _
+  override protected def graphLoader: GraphLoader =
+    new DefaultGraphLoader(new Path(new Path(modelPath), "tensorflow_inception_graph.pb"))
 
-  override def open(parameters: Configuration): Unit = {
-    super.open(parameters)
-    labels = GraphUtils.readAllLines(
-      new Path(modelPath, "imagenet_comp_graph_label_strings.txt"), StandardCharsets.UTF_8).asScala.toList
-    graph = GraphUtils.importFromPath(
-      new Path(modelPath, "tensorflow_inception_graph.pb"), "inception")
+  @transient lazy val labels: List[String] = GraphUtils.readAllLines(
+    new Path(new Path(modelPath), "imagenet_comp_graph_label_strings.txt"), StandardCharsets.UTF_8).asScala.toList
 
-    session = new Session(graph)
+  def labeled2(tensor: LabelTensor): Array[LabeledImage] = {
+    Array(LabeledImage(List[(Float,String)]().asJava))
   }
 
-
-  override def close(): Unit = {
-    session.close()
-    graph.close()
-    super.close()
+  /**
+    * Convert the label tensor to a list of labels.
+    */
+  def labeled(tensor: LabelTensor): Array[LabeledImage] = {
+    // the tensor consists of a row per image, with columns representing label probabilities
+    val t = tensor.toTensor
+    try {
+      require(t.numDimensions() == 2, "expected a [M N] shaped tensor")
+      val matrix = Array.ofDim[Float](t.shape()(0).toInt,t.shape()(1).toInt)
+      t.copyTo(matrix)
+      matrix.map { row =>
+        LabeledImage(row.toList.zip(labels).sortWith(_._1 > _._1).take(5).asJava)
+      }
+    }
+    finally {
+      t.close()
+    }
   }
 
+  /**
+    * Label an image according to the inception model.
+    */
+  val label: InferenceSignature[InceptionModel] = new InferenceSignature()
+}
 
-  override def map(input: FlinkTuple2[String,TensorValue]): Inference = {
-    val cmd = session.runner().feed("inception/input", input.f1.toTensor).fetch("inception/output")
-    val result = cmd.run().get(0)
+@SerialVersionUID(1L)
+class InferenceSignature[M]
+  extends Signature[M,ImageTensor,LabelTensor] {
 
-    val rshape = result.shape
-    if (result.numDimensions != 2 || rshape(0) != 1)
-      throw new RuntimeException(String.format("Expected model to produce a [1 N] shaped tensor where N is the number of labels, instead it produced one with shape %s", util.Arrays.toString(rshape)))
-    val nlabels = rshape(1).toInt
-    val inferenceMatrix = Array.ofDim[Float](1,nlabels)
-    result.copyTo(inferenceMatrix)
-
-    val inference = toInference(input.f0, inferenceMatrix)
-    LOG.info(s"LabelImage($input) => $inference")
-    inference
-  }
-
-  private def toInference(imageName: String, inferenceMatrix: Array[Array[Float]]): Inference = {
-    Inference(imageName, inferenceMatrix(0).toList.zip(labels).sortWith(_._1 > _._1).take(5))
+  override def run(model: M, context: RunContext, input: ImageTensor): LabelTensor = {
+    val i = input.toTensor
+    try {
+      val cmd = context.session.runner().feed("input", i).fetch("output")
+      val o = cmd.run()
+      try {
+        o.get(0).as[TensorValue]
+      }
+      finally {
+        o.asScala.foreach(_.close())
+      }
+    }
+    finally {
+      i.close()
+    }
   }
 }
 
-case class Inference(imageName: String, inferences: List[(Float,String)])
+object InceptionModel {
 
+  /**
+    * A set of images encoded as a 4D tensor of floats.
+    */
+  type ImageTensor = TensorValue
+
+  /**
+    * A set of labels encoded a 2D tensor of floats.
+    */
+  type LabelTensor = TensorValue
+
+  /**
+    * An image with associated labels (sorted by probability descending)
+    */
+  case class LabeledImage(labels: JavaList[(Float,String)])
+}

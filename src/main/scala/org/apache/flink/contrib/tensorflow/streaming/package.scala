@@ -21,7 +21,7 @@ package object streaming {
       *
       * Supports models that implement [[org.apache.flink.contrib.tensorflow.models.RichModel]].
       */
-    def mapWithModel[M <: Model[M],R: TypeInformation](model: M)(fun: (T,M) => R): DataStream[R] = {
+    def mapWithModel[M <: Model[M], R: TypeInformation](model: M)(fun: (T,M) => R): DataStream[R] = {
       if (fun == null) {
         throw new NullPointerException("Map function must not be null.")
       }

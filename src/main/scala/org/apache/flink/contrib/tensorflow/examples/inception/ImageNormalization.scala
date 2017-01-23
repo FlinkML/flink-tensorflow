@@ -7,7 +7,8 @@ import com.twitter.bijection.{AbstractInjection, Injection}
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalization._
 import org.apache.flink.contrib.tensorflow.models.Model.RunContext
-import org.apache.flink.contrib.tensorflow.models.{GenericModel, Signature}
+import org.apache.flink.contrib.tensorflow.models.Signature
+import org.apache.flink.contrib.tensorflow.models.generic.{GenericModel, GraphDefGraphLoader, GraphLoader}
 import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.util.Preconditions.checkState
 import org.slf4j.{Logger, LoggerFactory}
@@ -58,6 +59,9 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
       }
     }
   }
+
+
+  override protected def graphLoader: GraphLoader = new GraphDefGraphLoader(graphDef)
 
   /**
     * Normalizes an image to a 4D tensor value.

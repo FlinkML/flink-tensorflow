@@ -1,19 +1,18 @@
-package org.apache.flink.contrib.tensorflow.models
+package org.apache.flink.contrib.tensorflow.models.generic
 
-import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
+import org.apache.flink.contrib.tensorflow.models.{Model, RichModel, Signature}
 import org.apache.flink.util.Preconditions.checkState
-import org.tensorflow.framework.GraphDef
 import org.tensorflow.{Graph, Session}
 
 /**
-  * A generic model based on a graphdef.
+  * A generic model based on an ad-hoc graph.
   *
-  * Implementation classes provide the graphdef defining the graph to use.
+  * Implementation classes provide the graph to use with a graph loader.
   */
 abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] {
   that: Self =>
 
-  protected def graphDef: GraphDef
+  protected def graphLoader: GraphLoader
 
   // --- RUNTIME ---
 
@@ -21,7 +20,7 @@ abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] 
   private var session: Session = _
 
   override def open(): Unit = {
-    graph = GraphBuilder.fromGraphDef(graphDef)
+    graph = graphLoader.load()
     try {
       session = new Session(graph)
     }

@@ -132,9 +132,9 @@ public class GraphBuilder implements AutoCloseable {
 		}
 	}
 
-	public static Graph fromGraphDef(GraphDef graphDef) {
+	public static Graph fromGraphDef(GraphDef graphDef, String prefix) {
 		Graph g = new Graph();
-		g.importGraphDef(graphDef.toByteArray());
+		g.importGraphDef(graphDef.toByteArray(), prefix);
 		return g;
 	}
 }
