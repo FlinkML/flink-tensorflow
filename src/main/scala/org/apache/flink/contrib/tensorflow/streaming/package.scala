@@ -1,6 +1,5 @@
 package org.apache.flink.contrib.tensorflow
 
-import org.apache.flink.api.common.functions.MapFunction
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.contrib.tensorflow.common.functions.AbstractMapFunction
 import org.apache.flink.contrib.tensorflow.models.Model
@@ -16,7 +15,7 @@ package object streaming {
   implicit class RichDataStream[T: TypeInformation : ClassTag](stream: DataStream[T]) {
 
     /**
-      * Creates a new DataStream by applying the given function to evey element of this
+      * Creates a new DataStream by applying the given function to every element of this
       * DataStream using the associated model.
       *
       * Supports models that implement [[org.apache.flink.contrib.tensorflow.models.RichModel]].

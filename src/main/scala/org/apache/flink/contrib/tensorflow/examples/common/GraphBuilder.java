@@ -1,7 +1,6 @@
 package org.apache.flink.contrib.tensorflow.examples.common;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.flink.contrib.tensorflow.streaming.functions.GraphInitializer;
 import org.tensorflow.DataType;
 import org.tensorflow.Graph;
 import org.tensorflow.Output;
@@ -10,6 +9,7 @@ import org.tensorflow.framework.GraphDef;
 import org.tensorflow.framework.TensorShapeProto;
 
 /**
+ * A graph builder.
  */
 public class GraphBuilder implements AutoCloseable {
 	private Graph g;
