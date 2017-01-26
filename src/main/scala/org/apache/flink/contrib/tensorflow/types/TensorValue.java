@@ -18,6 +18,7 @@
 package org.apache.flink.contrib.tensorflow.types;
 
 import org.apache.flink.annotation.Public;
+import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.contrib.tensorflow.TFUtils;
 import org.apache.flink.core.io.VersionMismatchException;
 import org.apache.flink.core.memory.DataInputView;
@@ -30,6 +31,7 @@ import org.tensorflow.framework.TensorShapeProto;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -44,12 +46,12 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * @see org.tensorflow.Tensor
  */
 @Public
-public final class TensorValue implements CopyableValue<TensorValue>
+public final class TensorValue<K extends Tuple,V> implements CopyableValue<TensorValue>
 {
 	private static final long serialVersionUID = 1L;
 
 	DataType dataType;
-	TensorShapeProto shape;
+	Tuple shape;
 	transient ByteBuffer buffer;
 
 	// --------------------------------------------------------------------------------------------
@@ -69,7 +71,7 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	 *
 	 * @param buffer a buffer with native byte order.
 	 */
-	TensorValue(DataType dataType, TensorShapeProto shape, ByteBuffer buffer) {
+	TensorValue(DataType dataType, Tuple shape, ByteBuffer buffer) {
 		this.dataType = dataType;
 		this.shape = checkNotNull(shape);
 		checkArgument(buffer.order() == ByteOrder.nativeOrder(), "buffer has non-native byte order");
@@ -94,15 +96,8 @@ public final class TensorValue implements CopyableValue<TensorValue>
 		StringBuilder sb = new StringBuilder(64);
 		sb.append('†');
 		sb.append(dataType);
-		if(shape != null && shape.getDimCount() > 0) {
-			sb.append('[');
-			for(int i = 0; i < shape.getDimCount(); i++) {
-				if(i > 0) sb.append(',');
-				long size = shape.getDim(i).getSize();
-				if(size > 0) sb.append(size);
-				else sb.append('?');
-			}
-			sb.append(']');
+		if(shape != null && shape.getArity() > 0) {
+			sb.append('[').append(shape).append(']');
 		}
 		return sb.toString();
 	}
@@ -118,32 +113,15 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	 * <p>Will be 0 for a scalar, 1 for a vector, 2 for a matrix, 3 for a 3-dimensional tensor etc.
 	 */
 	public int numDimensions() {
-		return this.shape.getDimCount();
+		return this.shape.getArity();
 	}
 
 	/**
 	 * Returns the <a href="https://www.tensorflow.org/resources/dims_types.html#shape">shape</a> of
 	 * the Tensor, i.e., the sizes (and names) of each dimension.
 	 */
-	public TensorShapeProto shape() {
-		return this.shape;
-	}
-
-	/**
-	 * Removes dimensions of size 1 from the shape of this tensor.
-	 */
-	public TensorValue squeeze(int[] axis) {
-		int remaining = shape.getDimCount() - axis.length;
-		TensorShapeProto.Builder b = TensorShapeProto.newBuilder(shape);
-		for(int i = 0; i < axis.length; i++) {
-			int dim = axis[i];
-			long size = b.getDim(dim).getSize();
-			if(size != 1) {
-				throw new IllegalArgumentException("unable to remove dimension " + dim + " with size " + size);
-			}
-			b.removeDim(dim);
-		}
-		return new TensorValue(dataType, b.build(), buffer);
+	public K shape() {
+		return shape.copy();
 	}
 
 	/**
@@ -166,7 +144,7 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	public int getBinaryLength() {
 		return 1 +
 			(Integer.SIZE / Byte.SIZE) + // datatype
-			(Integer.SIZE / Byte.SIZE) + shape.getSerializedSize() + // shape
+			(Integer.SIZE / Byte.SIZE) + (shape.getArity() * (Long.SIZE / Byte.SIZE)) + // shape
 			(Integer.SIZE / Byte.SIZE) + buffer.limit(); // data
 	}
 
@@ -178,9 +156,11 @@ public final class TensorValue implements CopyableValue<TensorValue>
 		}
 		int dtype = in.readInt();
 		this.dataType = TFUtils.getDataType(dtype);
-		byte[] shapeData = new byte[in.readInt()];
-		in.readFully(shapeData);
-		this.shape = TensorShapeProto.parseFrom(shapeData);
+		long[] shapeData = new long[in.readInt()];
+		for(int i = 0; i < shapeData.length; i++) {
+			shapeData[i] = in.readLong();
+		}
+		this.shape = TFUtils.shapeOf(shapeData);
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
 		this.buffer = ByteBuffer.wrap(data).order(ByteOrder.nativeOrder());
@@ -191,9 +171,10 @@ public final class TensorValue implements CopyableValue<TensorValue>
 		out.writeByte(VERSION_1);
 		int dtype = TFUtils.getValue(this.dataType);
 		out.writeInt(dtype);
-		byte[] shapeData = this.shape.toByteArray();
-		out.writeInt(shapeData.length);
-		out.write(shapeData);
+		out.writeInt(shape.getArity());
+		for(int i = 0; i < shape.getArity(); i++) {
+			out.writeLong((Long) shape.getField(i));
+		}
 		ByteBuffer src = buffer.duplicate();
 		src.rewind();
 		out.writeInt(src.remaining());
@@ -251,19 +232,14 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	//                                      Utilities
 	// --------------------------------------------------------------------------------------------
 
-	static TensorShapeProto convertShape(long[] shape) {
-		TensorShapeProto.Builder b = TensorShapeProto.newBuilder();
-		for(int i = 0; i < shape.length; i++) {
-			b.addDim(TensorShapeProto.Dim.newBuilder().setSize(shape[i]));
-		}
-		return b.build();
+	static Tuple convertShape(long[] shape) {
+		return TFUtils.shapeOf(shape);
 	}
 
-	static long[] convertShape(TensorShapeProto shape) {
-		long[] b = new long[shape.getDimCount()];
+	static long[] convertShape(Tuple shape) {
+		long[] b = new long[shape.getArity()];
 		for(int i = 0; i < b.length; i++) {
-			TensorShapeProto.Dim dim = shape.getDim(i);
-			b[i] = dim.getSize();
+			b[i] = shape.getField(i);
 		}
 		return b;
 	}
@@ -275,19 +251,16 @@ public final class TensorValue implements CopyableValue<TensorValue>
 	/**
 	 * Construct a {@link TensorValue} from a {@link Tensor}.
 	 *
-	 * <p>This method does not take ownership of the tensor.
+	 * <p>The caller takes ownership of the tensor.
+	 *
+	 * @param <K> Tensor rank
+	 * @param <V> Tensor data type
 	 */
-	public static TensorValue fromTensor(Tensor t) {
-		try {
-			DataType dataType = t.dataType();
-			TensorShapeProto shape = convertShape(t.shape());
-			ByteBuffer buffer = ByteBuffer.allocate(t.byteSize()).order(ByteOrder.nativeOrder());
-			t.writeTo(buffer);
-			buffer.rewind();
-			return new TensorValue(dataType, shape, buffer);
-		}
-		finally {
-//			t.unref();
-		}
+	public static <K extends Tuple,V> TensorValue<K,V> fromTensor(Tensor t) {
+		DataType dataType = t.dataType();
+		ByteBuffer buffer = ByteBuffer.allocate(t.byteSize()).order(ByteOrder.nativeOrder());
+		t.writeTo(buffer);
+		buffer.rewind();
+		return new TensorValue<K,V>(dataType, TFUtils.shapeOf(t.shape()), buffer);
 	}
 }

@@ -9,6 +9,7 @@ import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
 import org.apache.flink.contrib.tensorflow.models.Model.RunContext
 import org.apache.flink.contrib.tensorflow.models.Signature
 import org.apache.flink.contrib.tensorflow.models.generic.{DefaultGraphLoader, GenericModel, GraphLoader}
+import org.apache.flink.contrib.tensorflow.types.Rank._
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
@@ -72,7 +73,7 @@ class InferenceSignature[M]
       val cmd = context.session.runner().feed("input", i).fetch("output")
       val o = cmd.run()
       try {
-        o.get(0).as[TensorValue]
+        o.get(0).as[Option[TensorValue[`2D`,Float]]].getOrElse(error("expected an output tensor of [2D,Float]"))
       }
       finally {
         o.asScala.foreach(_.close())
@@ -87,14 +88,14 @@ class InferenceSignature[M]
 object InceptionModel {
 
   /**
-    * A set of images encoded as a 4D tensor of floats.
+    * A set of images encoded as a 4-D tensor of floats.
     */
-  type ImageTensor = TensorValue
+  type ImageTensor = TensorValue[`4D`,Float]
 
   /**
-    * A set of labels encoded a 2D tensor of floats.
+    * A set of labels encoded a 2-D tensor of floats.
     */
-  type LabelTensor = TensorValue
+  type LabelTensor = TensorValue[`2D`,Float]
 
   /**
     * An image with associated labels (sorted by probability descending)

@@ -6,10 +6,16 @@ import com.google.protobuf.Message
 import com.twitter.bijection.Inversion.attemptWhen
 import com.twitter.bijection._
 import com.twitter.bijection.protobuf.ProtobufCodec
+import org.apache.flink.api.common.typeinfo.{TypeHint, TypeInformation}
 import org.apache.flink.contrib.tensorflow.TFUtils
 import org.tensorflow.{DataType, Tensor}
+import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
+import org.apache.flink.contrib.tensorflow.types.Rank.`2D`
+import org.apache.flink.api.scala._
 
 import scala.reflect.ClassTag
+import scala.reflect.classTag
+import scala.util.Try
 
 /**
   * Conversions to/from tensors.
@@ -88,25 +94,82 @@ trait Message2TensorInjections {
 
 trait TensorValue2TensorInjections {
 
+  type ByteString = Array[Byte]
+
   /**
-    * Convert a {@link Tensor} to a {@link TensorValue}.
+    * Convert a [[TensorValue]] of [[Float]] to a [[Tensor]].
     */
-  implicit def tensor2TensorValue: Bijection[Tensor,TensorValue] =
-    new AbstractBijection[Tensor,TensorValue] {
-      def apply(t: Tensor) = TensorValue.fromTensor(t)
-      override def invert(b: TensorValue): Tensor = b.toTensor
+  implicit def floatTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,Float],Tensor] =
+    new AbstractInjection[TensorValue[K,Float],Tensor] {
+      def apply(t: TensorValue[K,Float]) = t.toTensor
+      override def invert(t: Tensor): Try[TensorValue[K,Float]] = {
+        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
+        attemptWhen(t)(t => isK && t.dataType()==DataType.FLOAT) { t =>
+          // TODO(eronwright) - use FloatBuffer
+          TensorValue.fromTensor[K, Float](t)
+        }
+      }
     }
 
   /**
-    * Convert a {@link TensorValue} to a {@link Tensor}.
+    * Convert a [[TensorValue]] of [[Double]] to a [[Tensor]].
     */
-  implicit def tensorValue2Tensor: Bijection[TensorValue,Tensor] =
-    new AbstractBijection[TensorValue,Tensor] {
-      def apply(t: TensorValue) = t.toTensor
-      override def invert(b: Tensor): TensorValue = TensorValue.fromTensor(b)
+  implicit def doubleTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,Double],Tensor] =
+    new AbstractInjection[TensorValue[K,Double],Tensor] {
+      def apply(t: TensorValue[K,Double]) = t.toTensor
+      override def invert(t: Tensor): Try[TensorValue[K,Double]] = {
+        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
+        attemptWhen(t)(t => isK && t.dataType()==DataType.DOUBLE) { t =>
+          // TODO(eronwright) - use DoubleBuffer
+          TensorValue.fromTensor[K, Double](t)
+        }
+      }
+    }
+
+  /**
+    * Convert a [[TensorValue]] of [[Long]] to a [[Tensor]].
+    */
+  implicit def longTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,Long],Tensor] =
+    new AbstractInjection[TensorValue[K,Long],Tensor] {
+      def apply(t: TensorValue[K,Long]) = t.toTensor
+      override def invert(t: Tensor): Try[TensorValue[K,Long]] = {
+        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
+        attemptWhen(t)(t => isK && t.dataType()==DataType.INT64) { t =>
+          // TODO(eronwright) - use LongBuffer
+          TensorValue.fromTensor[K, Long](t)
+        }
+      }
+    }
+
+  /**
+    * Convert a [[TensorValue]] of [[Int]] to a [[Tensor]].
+    */
+  implicit def intTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,Int],Tensor] =
+    new AbstractInjection[TensorValue[K,Int],Tensor] {
+      def apply(t: TensorValue[K,Int]) = t.toTensor
+      override def invert(t: Tensor): Try[TensorValue[K,Int]] = {
+        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
+        attemptWhen(t)(t => isK && t.dataType()==DataType.INT32) { t =>
+          // TODO(eronwright) - use IntBuffer
+          TensorValue.fromTensor[K, Int](t)
+        }
+      }
+    }
+
+  /**
+    * Convert a [[TensorValue]] of [[ByteString]] to a [[Tensor]].
+    */
+  implicit def byteStringTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,ByteString],Tensor] =
+    new AbstractInjection[TensorValue[K,ByteString],Tensor] {
+      def apply(t: TensorValue[K,ByteString]) = t.toTensor
+      override def invert(t: Tensor): Try[TensorValue[K,ByteString]] = {
+        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
+        attemptWhen(t)(t => isK && t.dataType()==DataType.STRING) { t =>
+          TensorValue.fromTensor[K, ByteString](t)
+        }
+      }
     }
 }
-
 
 trait Array2TensorInjections {
   /**

@@ -1,5 +1,6 @@
 package org.apache.flink.contrib.tensorflow.types;
 
+import org.apache.flink.api.java.tuple.Tuple;
 import org.tensorflow.DataType;
 import org.tensorflow.framework.TensorShapeProto;
 
@@ -10,10 +11,10 @@ import java.nio.*;
  *
  * <p>Note: the supplied data is converted to a {@link ByteBuffer} as necessary.
  */
-public class TensorValueBuilder {
+public class TensorValueBuilder<K extends Tuple,V> {
 
 	private DataType dataType;
-	private TensorShapeProto shape;
+	private Tuple shape;
 	private Buffer buffer;
 
 	private TensorValueBuilder() {}
@@ -32,7 +33,7 @@ public class TensorValueBuilder {
 		return this;
 	}
 
-	public TensorValueBuilder shape(TensorShapeProto shape) {
+	public TensorValueBuilder shape(Tuple shape) {
 		this.shape = shape;
 		return this;
 	}

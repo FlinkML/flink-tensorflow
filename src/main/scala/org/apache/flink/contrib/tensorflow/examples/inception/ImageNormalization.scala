@@ -13,6 +13,7 @@ import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.util.Preconditions.checkState
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow._
+import org.apache.flink.contrib.tensorflow.types.Rank._
 
 /**
   * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
@@ -71,9 +72,9 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
 
 @SerialVersionUID(1L)
 class NormalizationSignature[M](inputName: String, outputName: String)
-  extends Signature[M,Seq[Image],TensorValue] {
+  extends Signature[M,Seq[Image],TensorValue[`4D`,Float]] {
 
-  override def run(model: M, context: RunContext, input: Seq[Image]): TensorValue = {
+  override def run(model: M, context: RunContext, input: Seq[Image]): TensorValue[`4D`,Float] = {
 
     // convert the input element to a tensor
     val i: Tensor = input.as[Tensor]

@@ -5,6 +5,7 @@ import java.nio.file.{FileSystems, Files, Paths}
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel.LabeledImage
 import org.apache.flink.contrib.tensorflow.streaming._
+import org.apache.flink.contrib.tensorflow.types.Rank.`4D`
 import org.apache.flink.contrib.tensorflow.types.TensorValue
 
 /**
@@ -28,7 +29,7 @@ object Inception {
 
     // normalize the raw image as a 4D image tensor
     val normalizationModel = new ImageNormalization()
-    val imageStream: DataStream[(String, TensorValue)] = env
+    val imageStream: DataStream[(String, TensorValue[`4D`,Float])] = env
       .fromCollection(images)
       .mapWithModel(normalizationModel) { (in, model) =>
         (in._1, model.run(Seq(in._2))(model.normalize))
