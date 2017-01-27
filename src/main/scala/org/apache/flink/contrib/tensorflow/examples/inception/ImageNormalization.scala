@@ -30,7 +30,7 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
         // Some constants specific to the pre-trained model at:
         // https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
         //
-        // - The model was trained with images scaled to 224x224 pixels.
+        // - The inception model was trained with images scaled to 224x224 pixels.
         // - The colors, represented as R, G, B in 1-byte each were converted to
         //   float using (value - Mean)/Scale.
         val H: Int = 224

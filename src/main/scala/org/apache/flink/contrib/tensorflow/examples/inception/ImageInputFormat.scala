@@ -3,58 +3,74 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import java.io.IOException
 import java.util.Collections
 
-import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat
-import org.apache.flink.core.fs.{FSDataInputStream, Path}
-import ImageNormalization.Image
-import WholeFileInputFormat._
 import org.apache.flink.api.common.io.GlobFilePathFilter
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.contrib.tensorflow.common.functions.util.ModelUtils
+import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat
+import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat._
+import org.apache.flink.core.fs.{FSDataInputStream, Path}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 
 /**
   * Input format for images.
   */
-class ImageInputFormat extends WholeFileInputFormat[(String,Image)] {
+@SerialVersionUID(1L)
+class ImageInputFormat extends WholeFileInputFormat[(String,ImageTensor)] {
+
+  protected val LOG: Logger = LoggerFactory.getLogger(classOf[ImageInputFormat])
 
   def this(includePattern: String) {
     this()
     setFilesFilter(new GlobFilePathFilter(List(includePattern).asJava, Collections.emptyList()))
   }
 
+  /**
+    * The image normalization model that transforms JPEG files to 4D tensors
+    */
+  @transient var model: ImageNormalization = _
+
+  override def openInputFormat(): Unit = {
+    super.openInputFormat()
+    model = new ImageNormalization()
+    ModelUtils.openModel(model)
+  }
+
+  override def closeInputFormat(): Unit = {
+    ModelUtils.closeModel(model)
+    super.closeInputFormat()
+  }
 
   override def configure(parameters: Configuration): Unit = {
     super.configure(parameters)
-    setFilesFilter(new GlobFilePathFilter(List("**.jpg").asJava, List("**.crdownload").asJava))
+    setFilesFilter(new GlobFilePathFilter(List("**.jpg", "**.jpeg").asJava, List("**.crdownload").asJava))
   }
 
   /**
-    * This function parses the given file stream which represents a serialized record.
-    * The function returns a valid record or throws an IOException.
+    * This function parses the given file stream which represents a raw image.
+    * The function returns a valid image tensor or throws an IOException.
     *
     * @param reuse      An optionally reusable object.
     * @param fileStream The file input stream.
-    * @return Returns the read record if it was successfully read.
-    * @throws IOException if the record could not be read.
+    * @return Returns the image tensor if it was successfully read.
+    * @throws IOException if the image could not be read.
     */
-  override def readRecord(reuse: (String,Image), filePath: Path, fileStream: FSDataInputStream, fileLength: Long): (String,Image) = {
+  override def readRecord(
+       reuse: (String,ImageTensor),
+       filePath: Path, fileStream: FSDataInputStream,
+       fileLength: Long): (String,ImageTensor) = {
+
     if(fileLength > Int.MaxValue) {
       throw new IllegalArgumentException("the file is too large to be fully read")
     }
-    val name = filePath.getName
-    reuse match {
-      case (_: String, r: Array[Byte]) if r.length == fileLength => (name, readFully(fileStream, r, 0, r.length))
-      case _ => (name, readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt))
-    }
-  }
+    val imageData = readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt)
+    val imageTensor = model.run(Seq(imageData))(model.normalize)
 
-//  override def readRecord(reuse: Image, filePath: Path, fileStream: FSDataInputStream, fileLength: Long): Image = {
-//    if(fileLength > Int.MaxValue) {
-//      throw new IllegalArgumentException("the file is too large to be fully read")
-//    }
-//    reuse match {
-//      case r: Array[Byte] if r.length == fileLength => readFully(fileStream, r, 0, r.length)
-//      case _ => readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt)
-//    }
-//  }
+    (filePath.getName, imageTensor)
+  }
+}
+
+object ImageInputFormat {
+  def apply(): ImageInputFormat = new ImageInputFormat
 }

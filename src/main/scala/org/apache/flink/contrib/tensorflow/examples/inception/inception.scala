@@ -1,13 +1,12 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
-import java.nio.file.{FileSystems, Files, Paths}
+import java.nio.file.Paths
 
-import org.apache.flink.streaming.api.scala._
 import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel.LabeledImage
 import org.apache.flink.contrib.tensorflow.streaming._
-import org.apache.flink.contrib.tensorflow.types.Rank.`4D`
-import org.apache.flink.contrib.tensorflow.types.TensorValue
-import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCESS_CONTINUOUSLY
+import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCESS_ONCE
+import org.apache.flink.streaming.api.scala._
+
 import scala.concurrent.duration._
 
 /**
@@ -28,17 +27,11 @@ object Inception {
     val modelPath = Paths.get(args(0)).toUri
     val imagesPath = args(1)
 
-    val fileStream = env.readFile(new ImageInputFormat, imagesPath, PROCESS_CONTINUOUSLY, (1 second).toMillis)
+    // read each image
+    val imageStream = env
+      .readFile(new ImageInputFormat, imagesPath, PROCESS_ONCE, (1 second).toMillis)
 
-    // normalize the raw image as a 4D image tensor
-    val normalizationModel = new ImageNormalization()
-
-    val imageStream: DataStream[(String, TensorValue[`4D`,Float])] =
-      fileStream.mapWithModel(normalizationModel) { (in, model) =>
-        (in._1, model.run(Seq(in._2))(model.normalize))
-      }
-
-    // label the image tensor using the inception5h model
+    // label each image tensor using the inception5h model
     val inceptionModel = new InceptionModel(modelPath)
 
     val labelStream: DataStream[(String,LabeledImage)] = imageStream
