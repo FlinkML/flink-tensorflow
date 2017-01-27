@@ -22,6 +22,12 @@ class ImageInputFormat extends WholeFileInputFormat[(String,Image)] {
     setFilesFilter(new GlobFilePathFilter(List(includePattern).asJava, Collections.emptyList()))
   }
 
+
+  override def configure(parameters: Configuration): Unit = {
+    super.configure(parameters)
+    setFilesFilter(new GlobFilePathFilter(List("**.jpg").asJava, List("**.crdownload").asJava))
+  }
+
   /**
     * This function parses the given file stream which represents a serialized record.
     * The function returns a valid record or throws an IOException.

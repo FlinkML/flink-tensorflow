@@ -34,14 +34,10 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
   @transient lazy val labels: List[String] = GraphUtils.readAllLines(
     new Path(new Path(modelPath), "imagenet_comp_graph_label_strings.txt"), StandardCharsets.UTF_8).asScala.toList
 
-  def labeled2(tensor: LabelTensor): Array[LabeledImage] = {
-    Array(LabeledImage(List[(Float,String)]().asJava))
-  }
-
   /**
     * Convert the label tensor to a list of labels.
     */
-  def labeled(tensor: LabelTensor): Array[LabeledImage] = {
+  def labeled(tensor: LabelTensor, take: Int = 3): Array[LabeledImage] = {
     // the tensor consists of a row per image, with columns representing label probabilities
     val t = tensor.toTensor
     try {
@@ -49,7 +45,7 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
       val matrix = Array.ofDim[Float](t.shape()(0).toInt,t.shape()(1).toInt)
       t.copyTo(matrix)
       matrix.map { row =>
-        LabeledImage(row.toList.zip(labels).sortWith(_._1 > _._1).take(5).asJava)
+        LabeledImage(row.toList.zip(labels).sortWith(_._1 > _._1).take(take))
       }
     }
     finally {
@@ -100,5 +96,5 @@ object InceptionModel {
   /**
     * An image with associated labels (sorted by probability descending)
     */
-  case class LabeledImage(labels: JavaList[(Float,String)])
+  case class LabeledImage(labels: List[(Float,String)])
 }
