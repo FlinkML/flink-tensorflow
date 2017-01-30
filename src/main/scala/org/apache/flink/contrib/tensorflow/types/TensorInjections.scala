@@ -22,6 +22,7 @@ import scala.util.Try
   */
 object TensorInjections
   extends Array2TensorInjections
+  with Scalar2TensorInjections
   with TensorValue2TensorInjections
   with Message2TensorInjections {
 
@@ -225,6 +226,68 @@ trait Array2TensorInjections {
           val buffer = IntBuffer.allocate(t.numElements())
           t.writeTo(buffer)
           buffer.array()
+        }
+    }
+}
+
+trait Scalar2TensorInjections {
+  /**
+    * Embeds a [[String]] in a 0-D Tensor.
+    */
+  implicit def string2Tensor: Injection[String, Tensor] =
+    new AbstractInjection[String, Tensor] {
+      def apply(str: String) = Tensor.create(str.getBytes)
+      override def invert(t: Tensor) =
+        attemptWhen(t)(t => t.dataType() == DataType.STRING && t.shape().length == 0) { t =>
+          new String(t.bytesValue())
+        }
+    }
+
+  /**
+    * Embeds a [[Float]] in a 0-D Tensor.
+    */
+  implicit def float2Tensor: Injection[Float, Tensor] =
+    new AbstractInjection[Float, Tensor] {
+      def apply(value: Float) = Tensor.create(value)
+      override def invert(t: Tensor) =
+        attemptWhen(t)(t => t.dataType() == DataType.FLOAT && t.shape().length == 0) { t =>
+          t.floatValue()
+        }
+    }
+
+  /**
+    * Embeds a [[Double]] in a 0-D Tensor.
+    */
+  implicit def double2Tensor: Injection[Double, Tensor] =
+    new AbstractInjection[Double, Tensor] {
+      def apply(value: Double) = Tensor.create(value)
+      override def invert(t: Tensor) =
+        attemptWhen(t)(t => t.dataType() == DataType.DOUBLE && t.shape().length == 0) { t =>
+          t.doubleValue()
+        }
+    }
+
+  /**
+    * Embeds a [[Long]] in a 0-D Tensor.
+    */
+  implicit def long2Tensor: Injection[Long, Tensor] =
+    new AbstractInjection[Long, Tensor] {
+      def apply(value: Long) = Tensor.create(value)
+      override def invert(t: Tensor) =
+        attemptWhen(t)(t => t.dataType() == DataType.INT64 && t.shape().length == 0) { t =>
+          t.longValue()
+        }
+    }
+
+  /**
+    * Embeds an [[Int]] in a 0-D Tensor.
+    */
+  implicit def int2Tensor: Injection[Int, Tensor] =
+    new AbstractInjection[Int, Tensor] {
+      def apply(value: Int) = Tensor.create(value)
+      override def invert(t: Tensor) =
+        attemptWhen(t)(t => t.dataType() == DataType.INT32 && t.shape().length == 0) { t =>
+          t.intValue()
         }
     }
 }
