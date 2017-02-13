@@ -3,6 +3,7 @@ package org.apache.flink.contrib.tensorflow.models
 import org.apache.flink.contrib.tensorflow.models.Model.RunContext
 import org.apache.flink.ml.common.ParameterMap
 import org.tensorflow.Session
+import org.tensorflow.framework.SignatureDef
 
 import scala.annotation.implicitNotFound
 
@@ -13,9 +14,7 @@ import scala.annotation.implicitNotFound
   * the companion object of this class to find implicit values.
   *
   * @tparam Self Type of the [[Model]] subclass to which the [[Signature]] applies.
-  * @tparam IN   Type of the input data
   */
-@implicitNotFound(msg = "Cannot find Signature type class for model ${Self} and input ${IN}")
-trait Signature[Self, IN, OUT] extends Serializable {
-  def run(instance: Self, context: RunContext, input: IN): OUT
+@implicitNotFound(msg = "Cannot find signature for model ${Self}")
+trait Signature[Self] extends Serializable {
 }

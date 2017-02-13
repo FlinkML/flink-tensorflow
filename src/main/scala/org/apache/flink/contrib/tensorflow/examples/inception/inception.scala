@@ -8,6 +8,7 @@ import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCES
 import org.apache.flink.streaming.api.scala._
 
 import scala.concurrent.duration._
+import ImageLabelingSignature._
 
 /**
   * A streaming image labeler, based on the 'inception5h' model.
@@ -36,7 +37,7 @@ object Inception {
 
     val labelStream: DataStream[(String,LabeledImage)] = imageStream
       .mapWithModel(inceptionModel) { (in, model) =>
-        val labelTensor = model.run(in._2)(model.label)
+        val labelTensor = model.label(in._2)
         (in._1, model.labeled(labelTensor).head)
       }
 

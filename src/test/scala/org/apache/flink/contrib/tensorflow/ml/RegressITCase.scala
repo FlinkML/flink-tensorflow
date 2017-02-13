@@ -44,7 +44,7 @@ class RegressITCase extends WordSpecLike
           override def close(): Unit = model.close()
 
           override def map(value: LabeledExample): Float = {
-            val outputs = model.run(Seq(value._1))(model.regress)
+            val outputs = model.regress(Seq(value._1))
             val actual = outputs.output(0)
             checkState(actual == value._2)
             actual

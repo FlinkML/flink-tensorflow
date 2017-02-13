@@ -13,6 +13,8 @@ import org.apache.flink.streaming.api.windowing.time.Time
 import scala.collection.mutable
 import scala.concurrent.duration._
 
+import ImageLabelingSignature._
+
 /**
   * Identifies specific image sequences, based on the 'inception5h' model.
   */
@@ -40,7 +42,7 @@ object Johnny {
 
     val labelStream = imageStream
       .mapWithModel(inceptionModel) { (in, model) =>
-        val labelTensor = model.run(in._2)(model.label)
+        val labelTensor = model.label(in._2)
         val labeled = model.labeled(labelTensor, take = 3).head
         println(labeled)
         labeled
@@ -59,7 +61,7 @@ object Johnny {
         (pattern, timestamp) => AccessDenied(pattern))(
         (pattern) => AccessGranted(pattern("first"), pattern("second"), pattern("third")))
 
-    // print the
+    // print the detection events
     detectionStream.print()
 
     // execute program

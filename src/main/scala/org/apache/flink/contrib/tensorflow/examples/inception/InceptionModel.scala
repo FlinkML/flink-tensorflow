@@ -15,8 +15,10 @@ import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
+import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._
+import ImageLabelingSignature._
 
 /**
   * Infers labels for images.
@@ -53,30 +55,47 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
     }
   }
 
+  private val signatureDef = SignatureDef.newBuilder()
+    .setMethodName("label")
+    .putInputs(INFER_INPUTS, TensorInfo.newBuilder().setName("input").build())
+    .putOutputs(INFER_OUTPUTS, TensorInfo.newBuilder().setName("output").build())
+    .build()
+
   /**
     * Label an image according to the inception model.
     */
-  val label: InferenceSignature[InceptionModel] = new InferenceSignature()
+  def label[IN, OUT](input: IN)(implicit signature: ImageLabelingSignature[InceptionModel, IN, OUT]): OUT = {
+    run(signature.run(this, signatureDef, _, input))
+  }
+}
+
+
+trait ImageLabelingSignature[M, IN, OUT] extends Signature[M] {
+  def run(model: M, signatureDef: SignatureDef, context: RunContext, input: IN): OUT
 }
 
 @SerialVersionUID(1L)
-class InferenceSignature[M]
-  extends Signature[M,ImageTensor,LabelTensor] {
+object ImageLabelingSignature {
 
-  override def run(model: M, context: RunContext, input: ImageTensor): LabelTensor = {
-    val i = input.toTensor
-    try {
-      val cmd = context.session.runner().feed("input", i).fetch("output")
-      val o = cmd.run()
+  val INFER_INPUTS = "inputs"
+  val INFER_OUTPUTS = "outputs"
+
+  implicit def infer[M] = new ImageLabelingSignature[M, ImageTensor, LabelTensor] {
+    override def run(model: M, signatureDef: SignatureDef, context: RunContext, input: ImageTensor): LabelTensor = {
+      val i = input.toTensor
       try {
-        o.get(0).as[Option[TensorValue[`2D`,Float]]].getOrElse(error("expected an output tensor of [2D,Float]"))
+        val cmd = context.session.runner().feed("input", i).fetch("output")
+        val o = cmd.run()
+        try {
+          o.get(0).as[Option[TensorValue[`2D`,Float]]].getOrElse(error("expected an output tensor of [2D,Float]"))
+        }
+        finally {
+          o.asScala.foreach(_.close())
+        }
       }
       finally {
-        o.asScala.foreach(_.close())
+        i.close()
       }
-    }
-    finally {
-      i.close()
     }
   }
 }
@@ -93,3 +112,4 @@ object InceptionModel {
     */
   case class LabeledImage(labels: List[(Float,String)])
 }
+

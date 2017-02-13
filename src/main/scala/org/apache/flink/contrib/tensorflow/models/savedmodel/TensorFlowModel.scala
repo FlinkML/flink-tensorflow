@@ -1,5 +1,6 @@
 package org.apache.flink.contrib.tensorflow.models.savedmodel
 
+import org.apache.flink.contrib.tensorflow.models.Model.RunnableSignature
 import org.apache.flink.contrib.tensorflow.models.{Model, RichModel, Signature}
 import org.apache.flink.core.fs.Path
 import org.apache.flink.util.Preconditions.checkState
@@ -41,13 +42,13 @@ trait TensorFlowModel[Self <: TensorFlowModel[Self]]
     bundle = loader.load()
   }
 
-  override def run[IN,OUT](input: IN)(implicit op: Signature[Self, IN, OUT]): OUT = {
+  protected def run[OUT](runnable: RunnableSignature[OUT]): OUT = {
     checkState(bundle != null)
     val context = new Model.RunContext {
       override def graph: Graph = bundle.graph()
       override def session: Session = bundle.session()
     }
-    op.run(that, context, input)
+    runnable(context)
   }
 
   override def close() {

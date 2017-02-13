@@ -18,6 +18,13 @@ class HalfPlusTwo(modelPath: Path) extends TensorFlowModel[HalfPlusTwo] {
 
   // supported methods by the half-plus-two model
 
-  implicit val regress: RegressionSignature[HalfPlusTwo] =
-    new RegressionSignature(signatureDef(REGRESS_METHOD_NAME).getOrElse(sys.error("missing regress method")))
+  /**
+    * Regress the given input.
+    */
+  def regress[IN, OUT](input: IN)(implicit signature: RegressionSignature[HalfPlusTwo, IN, OUT]): OUT = {
+    val sigDef = signatureDef(REGRESS_METHOD_NAME).getOrElse(sys.error("missing regress method"))
+
+    // invoke the TF model 'run' with the given signature
+    run(signature.run(this, sigDef, _, input))
+  }
 }

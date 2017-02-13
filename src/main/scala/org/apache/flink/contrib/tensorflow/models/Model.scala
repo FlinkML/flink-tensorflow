@@ -2,6 +2,7 @@ package org.apache.flink.contrib.tensorflow.models
 
 import java.io.Serializable
 
+import org.apache.flink.contrib.tensorflow.models.Model.RunnableSignature
 import org.tensorflow.{Graph, Session}
 
 /**
@@ -23,10 +24,12 @@ trait Model[Self] extends Serializable {
     * @param method the method to apply.
     * @return the result of applying the method.
     */
-  def run[IN,OUT](input: IN)(implicit method: Signature[Self, IN, OUT]): OUT
+  protected def run[OUT](method: RunnableSignature[OUT]): OUT
 }
 
 object Model {
+
+  type RunnableSignature[OUT] = (Model.RunContext) => OUT
 
   /**
     * A context for model methods.
