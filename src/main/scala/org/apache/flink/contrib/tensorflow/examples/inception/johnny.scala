@@ -13,8 +13,6 @@ import org.apache.flink.streaming.api.windowing.time.Time
 import scala.collection.mutable
 import scala.concurrent.duration._
 
-import ImageLabelingSignature._
-
 /**
   * Identifies specific image sequences, based on the 'inception5h' model.
   */

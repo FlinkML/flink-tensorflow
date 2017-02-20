@@ -5,7 +5,6 @@ import org.tensorflow.example.{Example, Feature, Features, FloatList}
 import scala.collection.JavaConverters._
 
 /**
-  * @author Eron Wright
   */
 object TestData {
 

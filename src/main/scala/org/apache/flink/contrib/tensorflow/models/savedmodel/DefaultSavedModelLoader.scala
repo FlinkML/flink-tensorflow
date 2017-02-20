@@ -16,8 +16,9 @@ import scala.collection.JavaConverters._
   * @param exportPath the path to load from.
   * @param tags       the tags associated with the specific graph to load.
   */
+@SerialVersionUID(1L)
 class DefaultSavedModelLoader(exportPath: Path, tags: Set[String])
-  extends SavedModelLoader {
+  extends SavedModelLoader with Serializable {
 
   override lazy val metagraph: MetaGraphDef = {
     // TODO(eronwright) load metagraph directly (rather than loading the full bundle)

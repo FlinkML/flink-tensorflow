@@ -3,18 +3,17 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import java.io.IOException
 import java.util.Collections
 
+import com.twitter.bijection.Conversion._
 import org.apache.flink.api.common.io.GlobFilePathFilter
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.contrib.tensorflow.common.functions.util.ModelUtils
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat._
+import org.apache.flink.contrib.tensorflow.types._
 import org.apache.flink.core.fs.{FSDataInputStream, Path}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import ImageNormalizationSignature._
-import org.apache.flink.contrib.tensorflow.types.Rank.`4D`
-import org.apache.flink.contrib.tensorflow.types.TensorValue
 
 /**
   * Input format for images.
@@ -68,7 +67,7 @@ class ImageInputFormat extends WholeFileInputFormat[(String,ImageTensor)] {
       throw new IllegalArgumentException("the file is too large to be fully read")
     }
     val imageData = readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt)
-    val imageTensor: TensorValue[`4D`,Float] = model.normalize(Seq(imageData))
+    val imageTensor: ImageTensor = model.normalize(imageData.as[ImageFileTensor])
 
     (filePath.getName, imageTensor)
   }

@@ -3,19 +3,15 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import java.util.{List => JavaList}
 
 import com.twitter.bijection.Conversion._
-import com.twitter.bijection.{AbstractInjection, Injection}
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalization._
-import org.apache.flink.contrib.tensorflow.models.Model.RunContext
-import org.apache.flink.contrib.tensorflow.models.Signature
+import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalizationMethod._
 import org.apache.flink.contrib.tensorflow.models.generic.{GenericModel, GraphDefGraphLoader, GraphLoader}
-import org.apache.flink.contrib.tensorflow.types.TensorValue
-import org.apache.flink.util.Preconditions.checkState
+import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
+import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow._
-import org.apache.flink.contrib.tensorflow.types.Rank._
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
-import ImageNormalizationSignature._
 
 /**
   * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
@@ -55,7 +51,7 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
           b.constant("scale", scale))
 
         val signatureDef = SignatureDef.newBuilder()
-          .setMethodName("normalize")
+          .setMethodName(NORMALIZE_METHOD_NAME)
           .putInputs(NORMALIZE_INPUTS, TensorInfo.newBuilder().setName(input.op.name).build())
           .putOutputs(NORMALIZE_OUTPUTS, TensorInfo.newBuilder().setName(output.op.name).build())
           .build()
@@ -70,13 +66,9 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
   override protected def graphLoader: GraphLoader = new GraphDefGraphLoader(graphDef)
 
   /**
-    * Normalizes an image to a 4D tensor value.
+    * Normalizes an image to a 4-D tensor value.
     */
-  def normalize[IN, OUT](input: IN)(implicit signature: ImageNormalizationSignature[ImageNormalization, IN, OUT]): OUT = {
-
-    // invoke the TF model 'run' with the given signature
-    run(signature.run(this, signatureDef, _, input))
-  }
+  def normalize = ModelFunction[ImageNormalizationMethod](session, signatureDef)
 }
 
 object ImageNormalization {
@@ -85,57 +77,26 @@ object ImageNormalization {
 
   private[inception] val INPUT_IMAGE_TEMPLATE: Array[Byte] = new Array[Byte](86412)
 
-  // the input image type
-  type Image = Array[Byte]
-
-
 }
 
-/**
-  * Signature of an image normalization computation.
-  * @tparam M the model
-  * @tparam IN the image bytes
-  * @tparam OUT the image tensor
-  */
-trait ImageNormalizationSignature[M, IN, OUT] extends Signature[M] {
-  def run(model: M, signatureDef: SignatureDef, context: RunContext, input: IN): OUT
+sealed trait ImageNormalizationMethod extends ModelMethod {
+  val name = NORMALIZE_METHOD_NAME
 }
 
-object ImageNormalizationSignature {
-
+object ImageNormalizationMethod {
+  val NORMALIZE_METHOD_NAME = "inception/normalize"
   val NORMALIZE_INPUTS = "inputs"
   val NORMALIZE_OUTPUTS = "outputs"
 
   /**
-    * Convert a {@code Seq[Image]} to a {@link Tensor} of type {@link DataType#STRING}.
+    * Normalizes a vector of image files to a vector of images.
+    * @param input the images as a [[ImageFileTensor]]
+    * @return the image data as a [[ImageTensor]]
     */
-  private[inception] implicit def images2Tensor: Injection[Seq[ImageData], Tensor] =
-    new AbstractInjection[Seq[ImageData], Tensor] {
-      def apply(arrys: Seq[ImageData]) = {
-        // TODO
-        Tensor.create(arrys.head)
-      }
-      override def invert(t: Tensor) = ???
-    }
-
-  type ImageData = Array[Byte]
-
-  implicit def fromByteArray[M] = new ImageNormalizationSignature[M, Seq[Array[Byte]], TensorValue[`4D`,Float]] {
-      override def run(model: M, signatureDef: SignatureDef, context: RunContext, input: Seq[ImageData]): TensorValue[`4D`, Float] = {
-        // convert the input element to a tensor
-        val i: Tensor = input.toSeq.as[Tensor]
-
-        // define the command to fetch the output tensor
-        val inputName = signatureDef.getInputsMap.get(NORMALIZE_INPUTS).getName
-        val outputName = signatureDef.getOutputsMap.get(NORMALIZE_OUTPUTS).getName
-        val command: Session#Runner = context.session.runner.feed(inputName, i).fetch(outputName)
-
-        // run the command
-        val o: JavaList[Tensor] = command.run
-
-        // process the output
-        checkState(o.size == 1)
-        TensorValue.fromTensor(o.get(0))
-      }
+  implicit def fromByteString(input: ImageFileTensor) =
+    new ImageNormalizationMethod {
+      type Result = ImageTensor
+      def inputs(): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> input.toTensor)
+      def outputs(o: Map[String, Tensor]): Result = o(NORMALIZE_OUTPUTS).as[Option[ImageTensor]].get
     }
 }

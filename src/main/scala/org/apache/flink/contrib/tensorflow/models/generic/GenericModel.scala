@@ -1,8 +1,6 @@
 package org.apache.flink.contrib.tensorflow.models.generic
 
-import org.apache.flink.contrib.tensorflow.models.Model.RunnableSignature
-import org.apache.flink.contrib.tensorflow.models.{Model, RichModel, Signature}
-import org.apache.flink.util.Preconditions.checkState
+import org.apache.flink.contrib.tensorflow.models.RichModel
 import org.tensorflow.{Graph, Session}
 
 /**
@@ -17,8 +15,8 @@ abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] 
 
   // --- RUNTIME ---
 
-  private var graph: Graph = _
-  private var session: Session = _
+  protected[this] var graph: Graph = _
+  protected[this] var session: Session = _
 
   override def open(): Unit = {
     graph = graphLoader.load()
@@ -41,14 +39,5 @@ abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] 
       graph.close()
       graph = null
     }
-  }
-
-  protected def run[OUT](runnable: RunnableSignature[OUT]): OUT = {
-    checkState(session != null)
-    val context = new Model.RunContext {
-      override def graph: Graph = that.graph
-      override def session: Session = that.session
-    }
-    runnable(context)
   }
 }

@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Eron Wright
  */
 public class GraphUtils {
 

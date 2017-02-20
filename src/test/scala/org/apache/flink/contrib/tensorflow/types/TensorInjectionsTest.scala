@@ -77,7 +77,7 @@ class TensorInjectionsTest
       bb.position(examples.size * 8)
       for(i <- examples.indices) {
         val data = examples(i).as[Tensor]
-        val b = ByteBuffer.allocate(data.byteSize())
+        val b = ByteBuffer.allocate(data.numBytes())
         data.writeTo(b)
         data.close()
         b.flip().position(8)

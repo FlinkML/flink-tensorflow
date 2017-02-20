@@ -130,7 +130,7 @@ public final class TensorValue<K extends Tuple,V> implements CopyableValue<Tenso
 	 * @return a tensor with a reference count of one.
 	 */
 	public Tensor toTensor() {
-		Tensor t = Tensor.create(dataType, convertShape(shape), buffer);
+		Tensor t = Tensor.create(dataType, convertShape(shape), buffer.duplicate());
 		return t;
 	}
 
@@ -258,7 +258,7 @@ public final class TensorValue<K extends Tuple,V> implements CopyableValue<Tenso
 	 */
 	public static <K extends Tuple,V> TensorValue<K,V> fromTensor(Tensor t) {
 		DataType dataType = t.dataType();
-		ByteBuffer buffer = ByteBuffer.allocate(t.byteSize()).order(ByteOrder.nativeOrder());
+		ByteBuffer buffer = ByteBuffer.allocate(t.numBytes()).order(ByteOrder.nativeOrder());
 		t.writeTo(buffer);
 		buffer.rewind();
 		return new TensorValue<K,V>(dataType, TFUtils.shapeOf(t.shape()), buffer);

@@ -1,7 +1,10 @@
 package org.apache.flink.contrib.tensorflow.ml.models
 
-import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionSignature
-import org.apache.flink.contrib.tensorflow.models.savedmodel.{DefaultSavedModelLoader, SavedModelLoader, TensorFlowModel}
+import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod
+import org.apache.flink.contrib.tensorflow.models.ModelFunction
+import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
+import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel
+import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel._
 import org.apache.flink.core.fs.Path
 
 /**
@@ -11,20 +14,16 @@ import org.apache.flink.core.fs.Path
   */
 @SerialVersionUID(1L)
 class HalfPlusTwo(modelPath: Path) extends TensorFlowModel[HalfPlusTwo] {
-  import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
-  import TensorFlowModel._
 
-  override protected def loader = load(modelPath, Set("serve"))
-
-  // supported methods by the half-plus-two model
+  override protected val loader = load(modelPath, Set("serve"))
 
   /**
-    * Regress the given input.
+    * Estimates y for a given x using the half-plus-two model.
     */
-  def regress[IN, OUT](input: IN)(implicit signature: RegressionSignature[HalfPlusTwo, IN, OUT]): OUT = {
-    val sigDef = signatureDef(REGRESS_METHOD_NAME).getOrElse(sys.error("missing regress method"))
+  def regress_x_to_y = ModelFunction[RegressionMethod](session(), signatureDef("regress_x_to_y").get)
 
-    // invoke the TF model 'run' with the given signature
-    run(signature.run(this, sigDef, _, input))
-  }
+  /**
+    * Estimates y for a given x using the half-plus-two model.
+    */
+  def regress_x_to_y2 = ModelFunction[RegressionMethod](session(), signatureDef("regress_x_to_y2").get)
 }

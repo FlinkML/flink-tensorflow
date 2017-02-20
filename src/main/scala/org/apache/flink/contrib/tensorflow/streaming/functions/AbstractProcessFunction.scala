@@ -6,7 +6,6 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.RichProcessFunction
 
 /**
-  * @author Eron Wright
   */
 abstract class AbstractProcessFunction[I, O] extends RichProcessFunction[I, O]
   with CheckpointedFunction

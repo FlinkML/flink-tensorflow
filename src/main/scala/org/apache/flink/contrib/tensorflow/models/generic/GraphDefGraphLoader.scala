@@ -11,7 +11,9 @@ import org.tensorflow.framework.GraphDef
   *
   * @param graphDef the graph definition.
   */
-class GraphDefGraphLoader(graphDef: GraphDef, prefix: String = "") extends GraphLoader {
+@SerialVersionUID(1L)
+class GraphDefGraphLoader(graphDef: GraphDef, prefix: String = "")
+  extends GraphLoader with Serializable {
   override def load(): Graph = {
     GraphBuilder.fromGraphDef(graphDef, prefix)
   }

@@ -2,23 +2,20 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 
 import java.net.URI
 import java.nio.charset.StandardCharsets
-import java.util.{List => JavaList}
 
 import com.twitter.bijection.Conversion._
 import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
-import org.apache.flink.contrib.tensorflow.models.Model.RunContext
-import org.apache.flink.contrib.tensorflow.models.Signature
+import org.apache.flink.contrib.tensorflow.examples.inception.LabelMethod._
 import org.apache.flink.contrib.tensorflow.models.generic.{DefaultGraphLoader, GenericModel, GraphLoader}
-import org.apache.flink.contrib.tensorflow.types.Rank._
+import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
-import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
+import org.tensorflow.Tensor
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._
-import ImageLabelingSignature._
 
 /**
   * Infers labels for images.
@@ -56,57 +53,41 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
   }
 
   private val signatureDef = SignatureDef.newBuilder()
-    .setMethodName("label")
-    .putInputs(INFER_INPUTS, TensorInfo.newBuilder().setName("input").build())
-    .putOutputs(INFER_OUTPUTS, TensorInfo.newBuilder().setName("output").build())
+    .setMethodName(LABEL_METHOD_NAME)
+    .putInputs(LABEL_INPUTS, TensorInfo.newBuilder().setName("input").build())
+    .putOutputs(LABEL_OUTPUTS, TensorInfo.newBuilder().setName("output").build())
     .build()
 
   /**
-    * Label an image according to the inception model.
+    * Infers labels for an image.
     */
-  def label[IN, OUT](input: IN)(implicit signature: ImageLabelingSignature[InceptionModel, IN, OUT]): OUT = {
-    run(signature.run(this, signatureDef, _, input))
-  }
+  def label = ModelFunction[LabelMethod](session, signatureDef)
 }
 
-
-trait ImageLabelingSignature[M, IN, OUT] extends Signature[M] {
-  def run(model: M, signatureDef: SignatureDef, context: RunContext, input: IN): OUT
+sealed trait LabelMethod extends ModelMethod {
+  def name = LABEL_METHOD_NAME
 }
 
 @SerialVersionUID(1L)
-object ImageLabelingSignature {
+object LabelMethod {
+  val LABEL_METHOD_NAME = "inception/label"
+  val LABEL_INPUTS = "inputs"
+  val LABEL_OUTPUTS = "outputs"
 
-  val INFER_INPUTS = "inputs"
-  val INFER_OUTPUTS = "outputs"
-
-  implicit def infer[M] = new ImageLabelingSignature[M, ImageTensor, LabelTensor] {
-    override def run(model: M, signatureDef: SignatureDef, context: RunContext, input: ImageTensor): LabelTensor = {
-      val i = input.toTensor
-      try {
-        val cmd = context.session.runner().feed("input", i).fetch("output")
-        val o = cmd.run()
-        try {
-          o.get(0).as[Option[TensorValue[`2D`,Float]]].getOrElse(error("expected an output tensor of [2D,Float]"))
-        }
-        finally {
-          o.asScala.foreach(_.close())
-        }
-      }
-      finally {
-        i.close()
-      }
+  /**
+    * Labels a tensor of normalized images as a tensor of labels (confidence scores).
+    * @param input the images as a [[ImageTensor]]
+    * @return the labels as a [[LabelTensor]]
+    */
+  implicit def fromImages(input: ImageTensor) =
+    new LabelMethod {
+      type Result = LabelTensor
+      def inputs(): Map[String, Tensor] = Map(LABEL_INPUTS -> input.toTensor)
+      def outputs(o: Map[String, Tensor]): Result = o(LABEL_OUTPUTS).as[Option[LabelTensor]].get
     }
-  }
 }
 
 object InceptionModel {
-
-  /**
-    * A set of labels encoded a 2-D tensor of floats.
-    */
-  type LabelTensor = TensorValue[`2D`,Float]
-
   /**
     * An image with associated labels (sorted by probability descending)
     */

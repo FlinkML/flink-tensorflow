@@ -6,7 +6,6 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.RichCoProcessFunction
 
 /**
-  * @author Eron Wright
   */
 abstract class AbstractCoProcessFunction[IN1, IN2, OUT] extends RichCoProcessFunction[IN1, IN2, OUT]
   with CheckpointedFunction

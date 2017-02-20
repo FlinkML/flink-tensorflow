@@ -12,11 +12,7 @@ import scala.collection.JavaConverters._
 /**
   * Represents a computation supported by a TensorFlow graph as defined by a [[SignatureDef]].
   */
-class ModelComputation(private val signatureDef: SignatureDef) extends GraphComputation {
-
-  def methodName: String = {
-    return signatureDef.getMethodName
-  }
+class ModelComputation(signatureDef: SignatureDef) extends GraphComputation {
 
   def run(session: Session, inputs: JavaMap[String, Tensor]): GraphComputation.Result = {
     val runner = session.runner

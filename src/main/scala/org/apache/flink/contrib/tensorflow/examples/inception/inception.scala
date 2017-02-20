@@ -8,7 +8,6 @@ import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCES
 import org.apache.flink.streaming.api.scala._
 
 import scala.concurrent.duration._
-import ImageLabelingSignature._
 
 /**
   * A streaming image labeler, based on the 'inception5h' model.
