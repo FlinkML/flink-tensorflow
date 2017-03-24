@@ -18,8 +18,8 @@ import scala.collection.JavaConverters._
 
 sealed trait LabelMethod extends GraphMethod {
   def name = LABEL_METHOD_NAME
-  override type IN = ImageTensor
-  override type OUT = LabelTensor
+  override type Input = ImageTensor
+  override type Output = LabelTensor
 }
 
 @SerialVersionUID(1L)

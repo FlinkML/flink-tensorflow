@@ -17,8 +17,8 @@ import org.apache.flink.contrib.tensorflow.graphs.GraphMethod
   */
 sealed trait RegressionMethod extends GraphMethod {
   val name = REGRESS_METHOD_NAME
-  override type IN = ExampleTensor
-  override type OUT = PredictionTensor
+  override type Input = ExampleTensor
+  override type Output = PredictionTensor
 }
 
 object RegressionMethod {

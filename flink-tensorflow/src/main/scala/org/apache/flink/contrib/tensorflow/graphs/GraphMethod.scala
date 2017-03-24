@@ -10,12 +10,12 @@ trait GraphMethod {
   /**
     * The input type of the method.
     */
-  type IN
+  type Input
 
   /**
     * The output type of the method.
     */
-  type OUT
+  type Output
 
   /**
     * The method name.
@@ -25,12 +25,12 @@ trait GraphMethod {
   /**
     * Gets the input values to feed when the method is invoked.
     */
-  def inputs(in: IN): Map[String, Tensor]
+  def inputs(in: Input): Map[String, Tensor]
 
   /**
     * Gets the result of invoking the method.
     * @param outputs a map of fetched outputs.
     */
-  def outputs(outputs: Map[String, Tensor]): OUT
+  def outputs(outputs: Map[String, Tensor]): Output
 
 }

@@ -21,7 +21,7 @@ trait ModelFunction[T <: GraphMethod] {
     *
     * @return the output values as provided by the method.
     */
-  def apply(in: T#IN): ManagedResource[T#OUT]
+  def apply(in: T#Input): ManagedResource[T#Output]
 }
 
 object ModelFunction {
@@ -37,7 +37,7 @@ object ModelFunction {
     require(method.name == signatureDef.getMethodName)
 
     new ModelFunction[T] {
-      def apply(in: T#IN): ManagedResource[T#OUT] = {
+      def apply(in: T#Input): ManagedResource[T#Output] = {
         require(in != null, "Input must be provided")
 
         // create a managed resource that lazily runs the graph
@@ -47,7 +47,7 @@ object ModelFunction {
             val runner = session.runner
 
             // map inputs according to the signaturedef
-            val inputs = method.inputs(in.asInstanceOf[method.IN])
+            val inputs = method.inputs(in.asInstanceOf[method.Input])
             signatureDef.getInputsMap.asScala.foreach { kv =>
               val tensor = inputs.getOrElse(kv._1,
                 throw new IllegalArgumentException(s"An input tensor named ${kv._1} must be provided for this computation."))

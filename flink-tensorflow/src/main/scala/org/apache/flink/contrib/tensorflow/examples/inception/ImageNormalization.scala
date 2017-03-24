@@ -13,8 +13,8 @@ import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 sealed trait ImageNormalizationMethod extends GraphMethod {
   val name = NORMALIZE_METHOD_NAME
-  override type IN = ImageFileTensor
-  override type OUT = ImageTensor
+  override type Input = ImageFileTensor
+  override type Output = ImageTensor
 }
 
 object ImageNormalizationMethod {
@@ -26,8 +26,8 @@ object ImageNormalizationMethod {
     * Normalizes a vector of image files to a vector of images.
     */
   implicit val impl = new ImageNormalizationMethod {
-    def inputs(i: IN): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> i)
-    def outputs(o: Map[String, Tensor]): OUT = o(NORMALIZE_OUTPUTS).taggedAs[ImageTensor]
+    def inputs(i: Input): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> i)
+    def outputs(o: Map[String, Tensor]): Output = o(NORMALIZE_OUTPUTS).taggedAs[ImageTensor]
   }
 }
 
