@@ -41,7 +41,7 @@ class RegressITCase extends WordSpecLike
       val env = StreamExecutionEnvironment.getExecutionEnvironment
       RegistrationUtils.registerTypes(env.getConfig)
 
-      val model = new HalfPlusTwo(new Path("models/half_plus_two"))
+      val model = new HalfPlusTwo(new Path("../models/half_plus_two"))
 
       val outputs = env
         .fromCollection(examples())

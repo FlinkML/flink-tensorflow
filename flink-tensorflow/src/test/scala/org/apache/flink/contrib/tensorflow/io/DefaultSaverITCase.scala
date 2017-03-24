@@ -23,7 +23,7 @@ class DefaultSaverITCase extends WordSpecLike
       val env = StreamExecutionEnvironment.getExecutionEnvironment
       RegistrationUtils.registerTypes(env.getConfig)
 
-      val loader = new DefaultSavedModelLoader(new Path("models/half_plus_two"), "serve")
+      val loader = new DefaultSavedModelLoader(new Path("../models/half_plus_two"), "serve")
       val bundle = loader.load()
       val saverDef = loader.metagraph.getSaverDef
       val saver = new DefaultSaver(saverDef)
