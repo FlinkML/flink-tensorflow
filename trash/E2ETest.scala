@@ -10,11 +10,10 @@ import org.tensorflow.example.Example
 import org.tensorflow.{DataType, Graph, Session, Tensor}
 import org.scalatest.Matchers._
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Ignore, Matchers, WordSpecLike}
 
 import scala.util.{Success, Try}
 import resource._
-import E2ETest._
 import com.twitter.bijection.Inversion.attemptWhen
 import org.apache.flink.api.java.tuple.Tuple
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
@@ -22,10 +21,15 @@ import org.apache.flink.contrib.tensorflow.experimental._
 import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.tensorflow.Session
 import org.tensorflow.Session.Run
-
+import org.tensorflow.contrib.scala._
+//import org.apache.flink.contrib.tensorflow._
+import E2ETest._
 import scala.reflect.{ClassTag, classTag}
+import org.tensorflow.contrib.scala.Arrays._
+import org.tensorflow.contrib.scala.Tensors._
 
 @RunWith(classOf[JUnitRunner])
+@Ignore
 class E2ETest
   extends WordSpecLike
   with Matchers {
@@ -77,7 +81,7 @@ class E2ETest
     "close" in {
       val session = new Session(graph)
       for(session <- managed(session)) {
-        session.graph()
+        session.runner()
       }
 
       // session shouldBe closed
@@ -200,10 +204,7 @@ class E2ETest
 
   "TypedTensor" should {
 
-    import org.apache.flink.contrib.tensorflow.TensorTag._
-
-    import TensorTags._
-    import org.apache.flink.contrib.tensorflow.types.Rank._
+    import org.tensorflow.contrib.scala.Rank._
 
     object Regression {
       type Input = TypedTensor[`1D`,Int]
@@ -311,7 +312,9 @@ object E2ETest {
 
     def regress(x: Tensor): ManagedResource[Tensor] = {
       // the session is not run yet; later the managed resource will be acquired
-      session.runner().feed("x", x).fetch("Sub",0).managed.map(_.outputs.get(0))
+
+//      session.runner().feed("x", x).fetch("Sub",0).managed.map(_.outputs.get(0))
+      ???
     }
 
     def close(): Unit = {
@@ -325,31 +328,6 @@ object E2ETest {
     case class Output(y: Tensor)
   }
 
-  object TensorTags extends TensorImplicits {
-    sealed trait DataType
-    trait INT32[Rank <: Product] extends DataType
-    trait INT64[Rank <: Product] extends DataType
-    trait FLOAT[Rank <: Product] extends DataType
-    trait DOUBLE[Rank <: Product] extends DataType
-    trait STRING[DT,Rank <: Product] extends DataType
-  }
-
-  implicit class RichTensor(t: Tensor) {
-    import TensorTags._
-    import org.apache.flink.contrib.tensorflow.types.Rank._
-
-    /**
-      * Tag a tensor with datatype and rank information
-      * @return
-      */
-//    def dimAndRank[R <: Tuple,DT]() = t.taggedWith[R].taggedWith[DT]
-//val f = dimAndRank[`1D`,Int]
-
-    def withRank[R <: Tuple]: Tensor @@ R =
-//      t.taggedWith[R] // homegrown
-      t.asInstanceOf[Tensor @@ R]
-
-  }
 
 //
 //
@@ -380,43 +358,3 @@ object E2ETest {
 //  }
 }
 
-trait TensorImplicits {
-
-  import org.apache.flink.contrib.tensorflow.TensorTag._
-  import org.apache.flink.contrib.tensorflow.types.Rank._
-
-//  implicit def tensorValueToTensor[T, U](implicit bij: ImplicitBijection[T, U]): Bijection[TensorValue[T], Tensor[U]] =
-//    Bijection.build[Optional[T], Option[U]] { opt =>
-//      if (opt.isPresent) Some(bij(opt.get)) else None
-//    } { opt =>
-//      if (opt.isDefined) Optional.of[T](bij.invert(opt.get)) else Optional.absent[T]
-//    }
-
-  /**
-    * Convert a [[Array]] of [[Int]] to a [[Tensor]].
-    */
-  implicit def intArray2Tensor: Bijection[Array[Int],TypedTensor[`1D`,Int]] =
-    Bijection.build[Array[Int], TypedTensor[`1D`,Int]] { arry =>
-      Tensor.create(arry).taggedWith[`1D`,Int]
-    } { t =>
-      val buf = IntBuffer.allocate(t.numElements())
-      t.writeTo(buf)
-      buf.array()
-    }
-
-    implicit def floatArray2Tensor[R <: Tuple]: Bijection[Array[Float],TypedTensor[`1D`,Float]] =
-      Bijection.build[Array[Float], TypedTensor[`1D`,Float]] { arry =>
-        Tensor.create(arry).taggedWith[`1D`,Float]
-      } { t =>
-        val buf = FloatBuffer.allocate(t.numElements())
-        t.writeTo(buf)
-        buf.array()
-      }
-
-  implicit def tensorValueToTensor[R,DT]: Bijection[TensorValue[R,DT], TypedTensor[R,DT]] =
-    Bijection.build[TensorValue[R,DT], TypedTensor[R,DT]] { value =>
-      value.toTensor.taggedWith[R,DT]
-    } { t =>
-      TensorValue.fromTensor[R,DT](t)
-    }
-}

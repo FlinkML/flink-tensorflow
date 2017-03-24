@@ -1,18 +1,114 @@
-package example
+package org.apache.flink.contrib.tensorflow.experimental
 
-import com.twitter.bijection._
 import com.twitter.bijection.Conversion._
+import com.twitter.bijection._
 import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
-import example.ComputeLoss._
 import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel
-import org.tensorflow.contrib.scala.Rank._
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.apache.flink.contrib.tensorflow.types.{TensorRef, TensorValue}
-import org.tensorflow.{Session, Tensor}
+import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.example.Example
 import org.tensorflow.framework.SignatureDef
-
+import org.tensorflow.{Session, Tensor}
 import resource._
+
+
+object Demo1 {
+
+  implicit val stringResource = new Resource[String] {
+    override def close(r: String): Unit = ???
+  }
+
+  trait GraphSignature {
+    type IN
+    type OUT
+    def inputs(in: IN): String
+    def outputs(s: String): OUT
+  }
+
+  class GraphComputation[S <: GraphSignature](implicit val method: S) {
+    def apply(in: method.IN): ManagedResource[method.OUT] = {
+      val s = method.inputs(in)
+      managed(s).map(method.outputs)
+    }
+  }
+
+  trait FooSignature extends GraphSignature {
+    override type IN = Int
+    override type OUT = Double
+  }
+
+  object FooSignature {
+    implicit val impl = new FooSignature {
+      override def inputs(in: Int): String = in.toString
+      override def outputs(s: String): Double = s.toDouble
+    }
+  }
+
+  class MyModel {
+    import FooSignature._
+    def x_to_y = new GraphComputation[FooSignature]
+  }
+
+  def main(): Unit = {
+    val m = new MyModel
+    val x = 1
+    val y: ManagedResource[Double] = m.x_to_y(x)
+    val z = m.x_to_y(1).map(_.toInt).opt.get
+  }
+}
+
+
+object Demo2 {
+
+  implicit val doubleResource = new Resource[Double] {
+    override def close(r: Double): Unit = ???
+  }
+
+  trait GraphMethod[IN,OUT] {
+    def inputs(in: IN): String
+    def outputs(s: String): OUT
+  }
+
+  class GraphComputation[S,IN,OUT](implicit method: GraphMethod[IN,OUT], ev: Resource[OUT]) {
+
+    def apply(in: IN): ManagedResource[OUT] = {
+      val s = method.inputs(in)
+      managed(method.outputs(s))
+    }
+  }
+
+  object GraphComputation {
+    def apply[S <: Function1[IN,OUT],IN,OUT](implicit method: GraphMethod[IN,OUT], ev: Resource[OUT]): GraphComputation[S,IN,OUT] = {
+      new GraphComputation
+    }
+  }
+
+  type FooSignature = Int => Double
+
+  object FooSignature {
+    type IN = Int
+    type OUT = Double
+    implicit val fooSignature = new GraphMethod[Int,Double] {
+      override def inputs(in: Int): String = in.toString
+      override def outputs(s: String): Double = s.toDouble
+    }
+  }
+
+  class MyModel {
+    import FooSignature._
+    def x_to_y = new GraphComputation[FooSignature,Int,Double]
+    def x_to_y2 = GraphComputation[FooSignature,Int,Double]
+  }
+
+  def main(): Unit = {
+    val m = new MyModel
+    val x = 1
+    val y: ManagedResource[Double] = m.x_to_y(x)
+  }
+}
+
+
 
 trait ModelMethod {
 
@@ -117,17 +213,17 @@ class App {
   def main(): Unit = {
 
     val bij = implicitly[Bijection[Int, String @@ Rep[Int]]]
-
-    val model: ExampleModel = ???
-
-    val input: ExampleTensor = ???
-
-
-    val y: ManagedResource[LossTensor] = model.lossA(fromExample(input))
-
-
-    y.acquireAndGet(_.shape())
-
+//
+//    val model: ExampleModel = ???
+//
+//    val input: ExampleTensor = ???
+//
+//
+//    val y: ManagedResource[LossTensor] = model.lossA(fromExample(input))
+//
+//
+//    y.acquireAndGet(_.shape())
+//
 
 //    val lossA: Result[LossTensor] = model.lossA(input1)
 //    for(i1 <- input1;
