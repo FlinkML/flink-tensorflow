@@ -1,17 +1,11 @@
-package org.apache.flink.contrib.tensorflow.models
+package org.apache.flink.contrib.tensorflow.graphs
 
 import org.tensorflow.Tensor
 
 /**
-  * Defines a method supported by a model.
-  *
-  * The [[ModelMethod]] type is base trait for types defining concrete model methods.
-  *
-  * A class implementing this trait acts as a magnet type for specific inputs and outputs.
-  * The companion object provides implicit conversions (i.e. magnet branches) for
-  * specific types that are convertible to/from tensors as required by the method.
+  * Defines a method supported by a TensorFlow graph.
   */
-trait ModelMethod {
+trait GraphMethod {
 
   /**
     * The input type of the method.

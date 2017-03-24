@@ -1,6 +1,7 @@
 package org.apache.flink.contrib.tensorflow.models
 
 
+import org.apache.flink.contrib.tensorflow.graphs.GraphMethod
 import org.apache.flink.contrib.tensorflow.types.TensorName
 import org.tensorflow.Session
 import org.tensorflow.Session.Run
@@ -12,9 +13,9 @@ import scala.collection.JavaConverters._
 /**
   * A model function.
   *
-  * @tparam T the signature providing specific input and output type information.
+  * @tparam T the graph method implemented by the function.
   */
-trait ModelFunction[T <: ModelMethod] {
+trait ModelFunction[T <: GraphMethod] {
   /**
     * Apply the model function to the graph.
     *
@@ -30,7 +31,7 @@ object ModelFunction {
     *
     * A [[SignatureDef]] binds the function to a specific graph.
     */
-  def apply[T <: ModelMethod](session: Session, signatureDef: SignatureDef)(implicit method: T): ModelFunction[T] = {
+  def apply[T <: GraphMethod](session: Session, signatureDef: SignatureDef)(implicit method: T): ModelFunction[T] = {
     require(session != null, "a session must be provided")
     require(signatureDef != null, "a signatureDef must be provided")
     require(method.name == signatureDef.getMethodName)

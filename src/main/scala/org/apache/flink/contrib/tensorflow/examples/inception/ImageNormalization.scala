@@ -3,15 +3,15 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalization._
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalizationMethod._
-import org.apache.flink.contrib.tensorflow.graphs.{GraphDefGraphLoader, GraphLoader}
+import org.apache.flink.contrib.tensorflow.graphs.{GraphDefGraphLoader, GraphLoader, GraphMethod}
 import org.apache.flink.contrib.tensorflow.models.generic.GenericModel
-import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
+import org.apache.flink.contrib.tensorflow.models.ModelFunction
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow._
 import org.tensorflow.contrib.scala._
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
-sealed trait ImageNormalizationMethod extends ModelMethod {
+sealed trait ImageNormalizationMethod extends GraphMethod {
   val name = NORMALIZE_METHOD_NAME
   override type IN = ImageFileTensor
   override type OUT = ImageTensor
@@ -32,7 +32,7 @@ object ImageNormalizationMethod {
 }
 
 /**
-  * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
+  * Decodes and normalizes a JPEG image as a 4D tensor.
   *
   * The output is compatible with inception5h.
   */

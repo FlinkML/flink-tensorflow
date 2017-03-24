@@ -1,7 +1,6 @@
 package org.apache.flink.contrib.tensorflow.ml.signatures
 
 import com.twitter.bijection._
-import org.apache.flink.contrib.tensorflow.models.ModelMethod
 import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.tensorflow.Tensor
@@ -9,13 +8,14 @@ import org.tensorflow.contrib.scala._
 import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.example.Example
 import RegressionMethod._
+import org.apache.flink.contrib.tensorflow.graphs.GraphMethod
 
 /**
   * The standard regression signature.
   *
   * See https://github.com/tensorflow/serving/blob/master/tensorflow_serving/servables/tensorflow/predict_impl.cc
   */
-sealed trait RegressionMethod extends ModelMethod {
+sealed trait RegressionMethod extends GraphMethod {
   val name = REGRESS_METHOD_NAME
   override type IN = ExampleTensor
   override type OUT = PredictionTensor

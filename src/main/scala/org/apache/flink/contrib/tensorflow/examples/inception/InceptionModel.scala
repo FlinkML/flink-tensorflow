@@ -4,9 +4,9 @@ import java.net.URI
 import java.nio.charset.StandardCharsets
 
 import org.apache.flink.contrib.tensorflow.examples.inception.LabelMethod._
-import org.apache.flink.contrib.tensorflow.graphs.{DefaultGraphLoader, GraphLoader}
+import org.apache.flink.contrib.tensorflow.graphs.{DefaultGraphLoader, GraphLoader, GraphMethod}
 import org.apache.flink.contrib.tensorflow.models.generic.GenericModel
-import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
+import org.apache.flink.contrib.tensorflow.models.ModelFunction
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
@@ -16,7 +16,7 @@ import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._
 
-sealed trait LabelMethod extends ModelMethod {
+sealed trait LabelMethod extends GraphMethod {
   def name = LABEL_METHOD_NAME
   override type IN = ImageTensor
   override type OUT = LabelTensor
