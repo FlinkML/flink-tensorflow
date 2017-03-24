@@ -1,9 +1,8 @@
 package org.apache.flink.contrib.tensorflow.ml
 
-import org.apache.flink.api.common.functions.RichMapFunction
+import org.apache.flink.api.common.functions.{RichFlatMapFunction, RichMapFunction}
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
-import org.apache.flink.contrib.tensorflow.ml.models.HalfPlusTwo
 import org.apache.flink.contrib.tensorflow.util.TestData._
 import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils, TestData}
 import org.apache.flink.core.fs.Path
@@ -17,9 +16,14 @@ import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod._
 import org.tensorflow.Tensor
 import com.twitter.bijection.Conversion._
 import com.twitter.bijection._
-import org.apache.flink.contrib.tensorflow.types.TensorInjections._
+import org.apache.flink.contrib.tensorflow.types.TensorInjections.message2Tensor
+import org.apache.flink.contrib.tensorflow.types.TensorInjections.messages2Tensor
 import org.apache.flink.contrib.tensorflow.types.TensorValue
-
+import org.apache.flink.util.Collector
+import resource._
+import org.tensorflow.contrib.scala._
+import org.tensorflow.contrib.scala.Rank._
+import org.tensorflow.contrib.scala.Arrays._
 
 @RunWith(classOf[JUnitRunner])
 class RegressITCase extends WordSpecLike
@@ -40,24 +44,25 @@ class RegressITCase extends WordSpecLike
       val env = StreamExecutionEnvironment.getExecutionEnvironment
       RegistrationUtils.registerTypes(env.getConfig)
 
-      val model = new HalfPlusTwo(new Path("file:///tmp/saved_model_half_plus_two"))
+      val model = new HalfPlusTwo(new Path("models/half_plus_two"))
 
       val outputs = env
         .fromCollection(examples())
-        .map(new RichMapFunction[LabeledExample, Float] {
+        .flatMap(new RichFlatMapFunction[LabeledExample, Float] {
           override def open(parameters: Configuration): Unit = model.open()
           override def close(): Unit = model.close()
-          override def map(value: LabeledExample): Float = {
 
-            val i: Tensor = Seq(value._1).toList.as[Tensor]
-
-            val inputs: ExampleTensor = TensorValue.fromTensor(i)
-            val outputs: PredictionTensor = model.regress_x_to_y(inputs)
-
-            val o: Array[Float] = outputs.as[Tensor].as[Option[Array[Float]]].get
-            val actual = o(0)
-            checkState(actual == value._2)
-            actual
+          override def flatMap(value: (Example, Float), out: Collector[Float]): Unit = {
+            for {
+              x <- managed(Seq(value._1).toList.as[Tensor].taggedAs[ExampleTensor])
+              y <- model.regress_x_to_y(x)
+            } {
+              // cast as a 1D tensor to use the available conversion
+              val o = y.taggedAs[TypedTensor[`1D`,Float]].as[Array[Float]]
+              val actual = o(0)
+              checkState(actual == value._2)
+              out.collect(actual)
+            }
           }
         })
         .print()

@@ -12,6 +12,11 @@ import org.apache.flink.streaming.api.windowing.time.Time
 
 import scala.collection.mutable
 import scala.concurrent.duration._
+import InceptionModel._
+
+import org.apache.flink.contrib.tensorflow.examples.inception._
+import org.tensorflow.contrib.scala._
+import resource._
 
 /**
   * Identifies specific image sequences, based on the 'inception5h' model.
@@ -36,15 +41,15 @@ object Johnny {
       .readFile(new ImageInputFormat, imagePath, PROCESS_CONTINUOUSLY, (1 second).toMillis)
 
     // 2. label the image using the TensorFlow 'inception' model
-    val inceptionModel = new InceptionModel(modelPath)
+    implicit val inceptionModel = new InceptionModel(modelPath)
 
-    val labelStream = imageStream
-      .mapWithModel(inceptionModel) { (in, model) =>
-        val labelTensor = model.label(in._2)
-        val labeled = model.labeled(labelTensor, take = 3).head
-        println(labeled)
-        labeled
-      }
+    val labelStream = imageStream.mapWithModel(inceptionModel) { (in, model) =>
+      val labeled = managed(in._2.toTensor.taggedAs[ImageTensor])
+        .flatMap(img => model.label(img))
+        .acquireAndGet(label => label.toTextLabels())
+      println(labeled.head)
+      labeled.head
+    }
 
     // 3. detect a certain time-based pattern representing a 'secret access code'
     val detectionPattern = Pattern

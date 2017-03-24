@@ -1,8 +1,7 @@
-package org.apache.flink.contrib.tensorflow.ml.models
+package org.apache.flink.contrib.tensorflow.ml
 
 import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod
 import org.apache.flink.contrib.tensorflow.models.ModelFunction
-import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
 import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel
 import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel._
 import org.apache.flink.core.fs.Path
@@ -15,7 +14,7 @@ import org.apache.flink.core.fs.Path
 @SerialVersionUID(1L)
 class HalfPlusTwo(modelPath: Path) extends TensorFlowModel[HalfPlusTwo] {
 
-  override protected val loader = load(modelPath, Set("serve"))
+  override protected val loader = load(modelPath, "serve")
 
   /**
     * Estimates y for a given x using the half-plus-two model.

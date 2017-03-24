@@ -1,5 +1,6 @@
 package org.apache.flink.contrib.tensorflow.models.generic
 
+import org.apache.flink.contrib.tensorflow.graphs.GraphLoader
 import org.apache.flink.contrib.tensorflow.models.RichModel
 import org.tensorflow.{Graph, Session}
 
@@ -15,8 +16,8 @@ abstract class GenericModel[Self <: GenericModel[Self]] extends RichModel[Self] 
 
   // --- RUNTIME ---
 
-  protected[this] var graph: Graph = _
-  protected[this] var session: Session = _
+  @transient protected[this] var graph: Graph = _
+  @transient protected[this] var session: Session = _
 
   override def open(): Unit = {
     graph = graphLoader.load()

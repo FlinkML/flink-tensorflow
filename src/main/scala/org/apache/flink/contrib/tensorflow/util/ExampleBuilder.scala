@@ -1,4 +1,4 @@
-package org.apache.flink.contrib.tensorflow.types
+package org.apache.flink.contrib.tensorflow.util
 
 import org.tensorflow.example.{Example, Feature, Features, FloatList}
 

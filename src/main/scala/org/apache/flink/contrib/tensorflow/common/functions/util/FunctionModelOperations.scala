@@ -7,7 +7,7 @@ import org.apache.flink.contrib.tensorflow.models.Model
 /**
   * A mix-in for functions to support the model lifecycle.
   */
-trait ModelFunctionSupport {
+trait FunctionModelOperations {
   this: RichFunction =>
 
   def model: Model[_]

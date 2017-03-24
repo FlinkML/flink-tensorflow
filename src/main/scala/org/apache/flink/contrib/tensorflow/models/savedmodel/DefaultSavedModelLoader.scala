@@ -2,11 +2,11 @@ package org.apache.flink.contrib.tensorflow.models.savedmodel
 
 import java.nio.file.Paths
 
-import org.apache.flink.core.fs.Path
+import org.apache.flink.core.fs.{FileSystem, Path}
 import org.tensorflow.SavedModelBundle
 import org.tensorflow.framework.MetaGraphDef
 
-import scala.collection.JavaConverters._
+import DefaultSavedModelLoader._
 
 /**
   * The default saved model loader.
@@ -17,15 +17,15 @@ import scala.collection.JavaConverters._
   * @param tags       the tags associated with the specific graph to load.
   */
 @SerialVersionUID(1L)
-class DefaultSavedModelLoader(exportPath: Path, tags: Set[String])
+class DefaultSavedModelLoader(exportPath: Path, tags: String*)
   extends SavedModelLoader with Serializable {
 
   override lazy val metagraph: MetaGraphDef = {
     // TODO(eronwright) load metagraph directly (rather than loading the full bundle)
 
-    // TODO support remote paths
-    val localPath = Paths.get(exportPath.toUri)
-    val bundle = SavedModelBundle.loadSavedModel(localPath.toString, tags.asJava)
+    // TODO(eronwright) support remote paths
+    val localPath = Paths.get(resolve(exportPath).toUri)
+    val bundle = SavedModelBundle.load(localPath.toString, tags:_*)
     try {
       MetaGraphDef.parseFrom(bundle.metaGraphDef())
     }
@@ -36,7 +36,13 @@ class DefaultSavedModelLoader(exportPath: Path, tags: Set[String])
 
   override def load(): SavedModelBundle = {
     // TODO(eronwright) support remote paths
-    val localPath = Paths.get(exportPath.toUri)
-    SavedModelBundle.loadSavedModel(localPath.toString, tags.asJava)
+    val localPath = Paths.get(resolve(exportPath).toUri)
+    SavedModelBundle.load(localPath.toString, tags:_*)
+  }
+}
+
+object DefaultSavedModelLoader {
+  private[tensorflow] def resolve(path: Path): Path = {
+    new Path(FileSystem.getLocalFileSystem.getWorkingDirectory, path)
   }
 }

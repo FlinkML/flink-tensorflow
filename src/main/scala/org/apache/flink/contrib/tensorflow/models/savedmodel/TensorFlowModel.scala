@@ -16,7 +16,7 @@ trait TensorFlowModel[Self <: TensorFlowModel[Self]]
   /**
     * The metagraph associated with the saved model.
     */
-  def metagraph: MetaGraphDef = loader.metagraph()
+  def metagraph: MetaGraphDef = loader.metagraph
 
   /**
     * Lookup a signaturedef by name.
@@ -56,6 +56,6 @@ object TensorFlowModel {
     * @param tags the tags identifying the specific metagraph to load
     * @return a loader
     */
-  def load(modelPath: Path, tags: Set[String]): SavedModelLoader =
-    new DefaultSavedModelLoader(modelPath, tags)
+  def load(modelPath: Path, tags: String*): SavedModelLoader =
+    new DefaultSavedModelLoader(modelPath, tags:_*)
 }

@@ -9,6 +9,7 @@ import org.tensorflow.{Session, Tensor}
 import scala.collection.JavaConverters._
 
 /**
+  * A saver of session state.
   */
 trait Saver {
 
@@ -23,8 +24,8 @@ trait Saver {
     * path can be passed directly to a call to `restore()`.
     *
     * See https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/training/saver.py#L1284
-    * @param sess
-    * @param savePath
+    * @param sess A `Session` to use to save the parameters.
+    * @param savePath Path to save parameters to.
     */
   def save(sess: Session, savePath: String): String
 
@@ -47,7 +48,7 @@ trait Saver {
 /**
   * A Saver implementation based on a [[SaverDef]].
   */
-class DefaultSaver(saverDef: SaverDef)  extends Saver {
+class DefaultSaver(saverDef: SaverDef) extends Saver {
 
   override def save(sess: Session, savePath: String): String = {
     val savePathT = savePath.as[Tensor]

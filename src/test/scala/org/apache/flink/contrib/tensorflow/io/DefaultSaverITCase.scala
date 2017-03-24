@@ -1,11 +1,15 @@
 package org.apache.flink.contrib.tensorflow.io
 
+import java.io.File
+
 import org.apache.flink.contrib.tensorflow.models.savedmodel.DefaultSavedModelLoader
 import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils}
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.junit.{JUnitRunner, JUnitSuite}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.tensorflow.{Session, Tensor}
 
@@ -23,7 +27,7 @@ class DefaultSaverITCase extends WordSpecLike
       val env = StreamExecutionEnvironment.getExecutionEnvironment
       RegistrationUtils.registerTypes(env.getConfig)
 
-      val loader = new DefaultSavedModelLoader(new Path("file:///tmp/saved_model_half_plus_two"), Set("serve"))
+      val loader = new DefaultSavedModelLoader(new Path("models/half_plus_two"), "serve")
       val bundle = loader.load()
       val saverDef = loader.metagraph.getSaverDef
       val saver = new DefaultSaver(saverDef)
@@ -35,7 +39,8 @@ class DefaultSaverITCase extends WordSpecLike
       println("Initial value: " + initialA)
 
       setA(1.0f)
-      val path = saver.save(bundle.session(), "/tmp/saved_model_half_plus_two.chk/mymodel-0")
+      val savePath = tempFolder.newFolder("model-0").getAbsolutePath
+      val path = saver.save(bundle.session(), savePath)
       val savedA = getA
       savedA shouldBe (1.0f)
       println("Saved value: " + getA)

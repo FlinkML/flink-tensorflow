@@ -10,7 +10,8 @@ import org.apache.flink.core.io.InputSplit
 /**
   * A stackable trait for input formats to support the model lifecycle.
   */
-trait ModelInputFormatSupport[OT, T <: InputSplit] extends RichInputFormat[OT,T] {
+@deprecated("unused")
+trait InputFormatModelOperations[OT, T <: InputSplit] extends RichInputFormat[OT,T] {
 
   def model: Model[_]
 

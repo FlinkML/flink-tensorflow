@@ -9,6 +9,7 @@ import org.tensorflow.example.*;
 import org.tensorflow.framework.*;
 
 /**
+ * Utility methods for registering serializable types.
  */
 public class RegistrationUtils {
 

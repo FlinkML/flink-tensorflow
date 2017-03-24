@@ -19,19 +19,17 @@ package org.apache.flink.contrib.tensorflow.types;
 
 import org.apache.flink.annotation.Public;
 import org.apache.flink.api.java.tuple.*;
-import org.apache.flink.contrib.tensorflow.TFUtils;
+import org.apache.flink.contrib.tensorflow.util.TFUtils;
 import org.apache.flink.core.io.VersionMismatchException;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 import org.apache.flink.types.CopyableValue;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
-import org.tensorflow.framework.TensorShapeProto;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -42,7 +40,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * The mutability allows for reuse of the object inside the user code, also across invocations. Reusing a TensorValue object
  * helps to increase the performance, as tensor objects are heavy-weight objects when created and destroyed en masse.
  *
- * <p>The value arrays contained in this class are considered immutable, to facilitate efficient copies.
+ * <p>The buffer contained in this class is considered immutable, to facilitate efficient copies.
+ *
  * @see org.tensorflow.Tensor
  */
 @Public
@@ -94,11 +93,11 @@ public final class TensorValue<K extends Tuple,V> implements CopyableValue<Tenso
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(64);
-		sb.append('†');
-		sb.append(dataType);
+		sb.append("TensorValue[");
 		if(shape != null && shape.getArity() > 0) {
-			sb.append('[').append(shape).append(']');
+			sb.append(shape).append(',');
 		}
+		sb.append(dataType).append(']');
 		return sb.toString();
 	}
 
@@ -118,7 +117,7 @@ public final class TensorValue<K extends Tuple,V> implements CopyableValue<Tenso
 
 	/**
 	 * Returns the <a href="https://www.tensorflow.org/resources/dims_types.html#shape">shape</a> of
-	 * the Tensor, i.e., the sizes (and names) of each dimension.
+	 * the Tensor, i.e., the sizes of each dimension.
 	 */
 	public K shape() {
 		return shape.copy();
@@ -130,8 +129,7 @@ public final class TensorValue<K extends Tuple,V> implements CopyableValue<Tenso
 	 * @return a tensor with a reference count of one.
 	 */
 	public Tensor toTensor() {
-		Tensor t = Tensor.create(dataType, convertShape(shape), buffer.duplicate());
-		return t;
+		return Tensor.create(dataType, convertShape(shape), buffer.duplicate());
 	}
 
 	// --------------------------------------------------------------------------------------------

@@ -26,8 +26,6 @@ abstract class WholeFileInputFormat[T] extends FileInputFormat[T] {
   }
 
   override protected def testForUnsplittable(pathFile: FileStatus): Boolean = {
-//    this.unsplittable = true
-//    return true
     false
   }
 

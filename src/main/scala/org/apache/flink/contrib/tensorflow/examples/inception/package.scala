@@ -1,28 +1,32 @@
 package org.apache.flink.contrib.tensorflow.examples
 
-import org.apache.flink.contrib.tensorflow.types.Rank._
+import org.tensorflow.contrib.scala.Rank._
 import org.apache.flink.contrib.tensorflow.types.TensorInjections.ByteString
 import org.apache.flink.contrib.tensorflow.types.TensorValue
+import org.tensorflow.contrib.scala.Tensors._
+import org.tensorflow.contrib.scala._
 
 package object inception {
 
   /**
     * A list of images encoded as a 4-D tensor of floats.
     */
-  type ImageTensor = TensorValue[`4D`,Float]
+  type ImageTensor = TypedTensor[`4D`,Float]
+
+  type ImageTensorValue = TensorValue[`4D`, Float]
 
   /**
-    * An image file.
+    * An image file (tag).
     */
-  type ImageFile = ByteString
+  trait ImageFile
 
   /**
     * A 0-D tensor containing an image file.
     */
-  type ImageFileTensor = TensorValue[`0D`, ImageFile]
+  type ImageFileTensor = TypedTensor[`0D`, ByteStr[ImageFile]]
 
   /**
     * A set of labels encoded a 2-D tensor of floats.
     */
-  type LabelTensor = TensorValue[`2D`,Float]
+  type LabelTensor = TypedTensor[`2D`,Float]
 }

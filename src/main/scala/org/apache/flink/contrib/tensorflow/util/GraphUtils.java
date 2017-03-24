@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Utility methods related to graph processing.
  */
 public class GraphUtils {
 
 	/**
 	 * Import a graph from the given {@link Path}.
+	 *
 	 * @param path the filesystem path to import from.
 	 * @return a graph instance.
 	 * @throws IOException if the path could not be read.
@@ -39,6 +41,14 @@ public class GraphUtils {
 		return graph;
 	}
 
+	/**
+	 * Read all lines of a text file.
+	 *
+	 * @param path the filesystem path to read.
+	 * @param cs the charset to use.
+	 * @return a list of strings corresponding to the lines of the text file.
+	 * @throws IOException if the file could not be read.
+	 */
 	public static List<String> readAllLines(Path path, Charset cs) throws IOException {
 		FileSystem fs = path.getFileSystem();
 		try(FSDataInputStream in = fs.open(path);

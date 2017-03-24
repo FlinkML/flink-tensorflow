@@ -6,12 +6,14 @@ import com.twitter.bijection.Conversion._
 import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalization._
 import org.apache.flink.contrib.tensorflow.examples.inception.ImageNormalizationMethod._
-import org.apache.flink.contrib.tensorflow.models.generic.{GenericModel, GraphDefGraphLoader, GraphLoader}
+import org.apache.flink.contrib.tensorflow.graphs.{GraphDefGraphLoader, GraphLoader}
+import org.apache.flink.contrib.tensorflow.models.generic.GenericModel
 import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow._
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
+import org.tensorflow.contrib.scala._
 
 /**
   * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
@@ -22,7 +24,6 @@ import org.tensorflow.framework.{SignatureDef, TensorInfo}
 class ImageNormalization extends GenericModel[ImageNormalization] {
 
   protected val (graphDef, signatureDef) = {
-    try {
       val b: GraphBuilder = new GraphBuilder
       try {
         // Some constants specific to the pre-trained model at:
@@ -60,7 +61,6 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
       } finally {
         b.close()
       }
-    }
   }
 
   override protected def graphLoader: GraphLoader = new GraphDefGraphLoader(graphDef)
@@ -96,7 +96,7 @@ object ImageNormalizationMethod {
   implicit def fromByteString(input: ImageFileTensor) =
     new ImageNormalizationMethod {
       type Result = ImageTensor
-      def inputs(): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> input.toTensor)
-      def outputs(o: Map[String, Tensor]): Result = o(NORMALIZE_OUTPUTS).as[Option[ImageTensor]].get
+      def inputs(): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> input)
+      def outputs(o: Map[String, Tensor]): Result = o(NORMALIZE_OUTPUTS).taggedAs[ImageTensor]
     }
 }

@@ -1,4 +1,4 @@
-package org.apache.flink.contrib.tensorflow.models.generic
+package org.apache.flink.contrib.tensorflow.graphs
 
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path

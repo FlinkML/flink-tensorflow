@@ -1,5 +1,6 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
+import org.tensorflow.contrib.scala._
 import java.nio.file.Paths
 
 import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel.LabeledImage
@@ -8,6 +9,9 @@ import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCES
 import org.apache.flink.streaming.api.scala._
 
 import scala.concurrent.duration._
+
+import InceptionModel._
+import resource._
 
 /**
   * A streaming image labeler, based on the 'inception5h' model.
@@ -32,12 +36,15 @@ object Inception {
       .readFile(new ImageInputFormat, imagesPath, PROCESS_ONCE, (1 second).toMillis)
 
     // label each image tensor using the inception5h model
-    val inceptionModel = new InceptionModel(modelPath)
+    implicit val inceptionModel = new InceptionModel(modelPath)
 
     val labelStream: DataStream[(String,LabeledImage)] = imageStream
       .mapWithModel(inceptionModel) { (in, model) =>
-        val labelTensor = model.label(in._2)
-        (in._1, model.labeled(labelTensor).head)
+        val labels =
+          managed(in._2.toTensor.taggedAs[ImageTensor])
+          .flatMap(x => model.label(x))
+          .acquireAndGet(_.toTextLabels())
+        (in._1, labels.head)
       }
 
     labelStream.print()

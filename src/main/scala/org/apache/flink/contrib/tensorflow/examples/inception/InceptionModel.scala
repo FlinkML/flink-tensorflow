@@ -3,10 +3,11 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
+import org.tensorflow.contrib.scala._
 import com.twitter.bijection.Conversion._
-import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
 import org.apache.flink.contrib.tensorflow.examples.inception.LabelMethod._
-import org.apache.flink.contrib.tensorflow.models.generic.{DefaultGraphLoader, GenericModel, GraphLoader}
+import org.apache.flink.contrib.tensorflow.graphs.{DefaultGraphLoader, GraphLoader}
+import org.apache.flink.contrib.tensorflow.models.generic.GenericModel
 import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
@@ -33,24 +34,6 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
   @transient lazy val labels: List[String] = GraphUtils.readAllLines(
     new Path(new Path(modelPath), "imagenet_comp_graph_label_strings.txt"), StandardCharsets.UTF_8).asScala.toList
 
-  /**
-    * Convert the label tensor to a list of labels.
-    */
-  def labeled(tensor: LabelTensor, take: Int = 3): Array[LabeledImage] = {
-    // the tensor consists of a row per image, with columns representing label probabilities
-    val t = tensor.toTensor
-    try {
-      require(t.numDimensions() == 2, "expected a [M N] shaped tensor")
-      val matrix = Array.ofDim[Float](t.shape()(0).toInt,t.shape()(1).toInt)
-      t.copyTo(matrix)
-      matrix.map { row =>
-        LabeledImage(row.toList.zip(labels).sortWith(_._1 > _._1).take(take))
-      }
-    }
-    finally {
-      t.close()
-    }
-  }
 
   private val signatureDef = SignatureDef.newBuilder()
     .setMethodName(LABEL_METHOD_NAME)
@@ -82,8 +65,8 @@ object LabelMethod {
   implicit def fromImages(input: ImageTensor) =
     new LabelMethod {
       type Result = LabelTensor
-      def inputs(): Map[String, Tensor] = Map(LABEL_INPUTS -> input.toTensor)
-      def outputs(o: Map[String, Tensor]): Result = o(LABEL_OUTPUTS).as[Option[LabelTensor]].get
+      def inputs(): Map[String, Tensor] = Map(LABEL_INPUTS -> input)
+      def outputs(o: Map[String, Tensor]): Result = o(LABEL_OUTPUTS).taggedAs[LabelTensor]
     }
 }
 
@@ -92,5 +75,22 @@ object InceptionModel {
     * An image with associated labels (sorted by probability descending)
     */
   case class LabeledImage(labels: List[(Float,String)])
+
+  implicit class RichLabelTensor(t: LabelTensor) {
+
+    /**
+      * Convert the label tensor to a list of labels.
+      */
+    def toTextLabels(take: Int = 3)(implicit model: InceptionModel): Array[LabeledImage] = {
+      // the tensor consists of a row per image, with columns representing label probabilities
+      require(t.numDimensions() == 2, "expected a [M N] shaped tensor")
+      val matrix = Array.ofDim[Float](t.shape()(0).toInt,t.shape()(1).toInt)
+      t.copyTo(matrix)
+      matrix.map { row =>
+        LabeledImage(row.toList.zip(model.labels).sortWith(_._1 > _._1).take(take))
+      }
+    }
+  }
+
 }
 

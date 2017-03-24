@@ -9,17 +9,20 @@ import org.apache.flink.configuration.Configuration
 import org.apache.flink.contrib.tensorflow.common.functions.util.ModelUtils
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat._
-import org.apache.flink.contrib.tensorflow.types._
+import org.apache.flink.contrib.tensorflow._
 import org.apache.flink.core.fs.{FSDataInputStream, Path}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
+import resource._
+import org.tensorflow.contrib.scala.ByteStrings._
+import org.tensorflow.contrib.scala.Tensors._
 
 /**
   * Input format for images.
   */
 @SerialVersionUID(1L)
-class ImageInputFormat extends WholeFileInputFormat[(String,ImageTensor)] {
+class ImageInputFormat extends WholeFileInputFormat[(String,ImageTensorValue)] {
 
   protected val LOG: Logger = LoggerFactory.getLogger(classOf[ImageInputFormat])
 
@@ -51,23 +54,28 @@ class ImageInputFormat extends WholeFileInputFormat[(String,ImageTensor)] {
 
   /**
     * This function parses the given file stream which represents a raw image.
-    * The function returns a valid image tensor or throws an IOException.
+    * The function returns a valid image tensor value or throws an IOException.
     *
     * @param reuse      An optionally reusable object.
     * @param fileStream The file input stream.
-    * @return Returns the image tensor if it was successfully read.
+    * @return Returns the image tensor value if it was successfully read.
     * @throws IOException if the image could not be read.
     */
   override def readRecord(
-       reuse: (String,ImageTensor),
+       reuse: (String,ImageTensorValue),
        filePath: Path, fileStream: FSDataInputStream,
-       fileLength: Long): (String,ImageTensor) = {
+       fileLength: Long): (String,ImageTensorValue) = {
 
     if(fileLength > Int.MaxValue) {
       throw new IllegalArgumentException("the file is too large to be fully read")
     }
-    val imageData = readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt)
-    val imageTensor: ImageTensor = model.normalize(imageData.as[ImageFileTensor])
+    val imageData =
+      readFully(fileStream, new Array[Byte](fileLength.toInt), 0, fileLength.toInt).asByteString[ImageFile]
+
+    val imageTensor: ImageTensorValue =
+      managed(imageData.as[ImageFileTensor])
+      .flatMap(x => model.normalize(x))
+      .acquireAndGet(_.toValue)
 
     (filePath.getName, imageTensor)
   }

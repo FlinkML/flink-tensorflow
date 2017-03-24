@@ -3,14 +3,18 @@ package org.apache.flink.contrib.tensorflow.ml.signatures
 import com.twitter.bijection.Conversion._
 import org.apache.flink.contrib.tensorflow.models.ModelMethod
 import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
-import org.apache.flink.contrib.tensorflow.types.Rank.`2D`
+import org.tensorflow.contrib.scala.Rank.`2D`
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
-import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.tensorflow.Tensor
 import org.tensorflow.example.Example
+import org.tensorflow.contrib.scala._
+import com.twitter.bijection.Conversion._
+import com.twitter.bijection._
+import RegressionMethod._
+import resource.ManagedResource
 
 /**
-  * The standard regression method.
+  * The standard regression signature.
   *
   * See https://github.com/tensorflow/serving/blob/master/tensorflow_serving/servables/tensorflow/predict_impl.cc
   */
@@ -19,8 +23,8 @@ sealed trait RegressionMethod extends ModelMethod {
 }
 
 object RegressionMethod {
-  type ExampleTensor = TensorValue[`2D`,Example]
-  type PredictionTensor = TensorValue[`2D`,Float]
+  type ExampleTensor = TypedTensor[`2D`, ByteString @@ Example]
+  type PredictionTensor = TypedTensor[`2D`,Float]
 
   /**
     * Predict a vector of values from a given vector of examples.
@@ -30,7 +34,8 @@ object RegressionMethod {
   implicit def fromExampleTensor(input: ExampleTensor) =
     new RegressionMethod {
       type Result = PredictionTensor
-      def inputs(): Map[String, Tensor] = Map(REGRESS_INPUTS -> input.toTensor)
-      def outputs(o: Map[String, Tensor]): Result = o(REGRESS_OUTPUTS).as[Option[PredictionTensor]].get
+      def inputs(): Map[String, Tensor] = Map(REGRESS_INPUTS -> input)
+      def outputs(o: Map[String, Tensor]): Result = o(REGRESS_OUTPUTS).taggedAs[PredictionTensor]
     }
 }
+

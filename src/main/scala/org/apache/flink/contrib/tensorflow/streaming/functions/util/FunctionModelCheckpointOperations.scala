@@ -5,11 +5,15 @@ import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSn
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 
 /**
-  * A mix-in for streaming functions to support the model lifecycle.
+  * A mix-in for streaming functions to support model checkpointing.
   */
-trait StreamingModelSupport {
+trait FunctionModelCheckpointOperations {
   this: CheckpointedFunction =>
 
+  /**
+    * The model to operate on.
+    * @return
+    */
   def model: Model[_]
 
   override def initializeState(context: FunctionInitializationContext): Unit =

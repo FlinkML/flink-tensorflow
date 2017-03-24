@@ -1,4 +1,4 @@
-package org.apache.flink.contrib.tensorflow;
+package org.apache.flink.contrib.tensorflow.util;
 
 import org.apache.flink.api.java.tuple.*;
 import org.tensorflow.DataType;

@@ -1,10 +1,21 @@
-package org.apache.flink.contrib.tensorflow.types
+package org.tensorflow.contrib.scala
 
 /**
-  * Represents rank in the TensorFlow system.
-  *
+  * A typeclass representing rank in the TensorFlow system.
   */
+trait Rank[R] {
+  def rank(t: R): Int
+}
+
 object Rank {
+  implicit def flinkTuple[R <: org.apache.flink.api.java.tuple.Tuple] = new Rank[R] {
+    override def rank(r: R): Int = r.getArity
+  }
+
+  implicit def scalaType[R <: Product] = new Rank[R] {
+    override def rank(r: R): Int = r.productArity
+  }
+
   type `0D`  = org.apache.flink.api.java.tuple.Tuple0
   type `1D`  = org.apache.flink.api.java.tuple.Tuple1[Long]
   type `2D`  = org.apache.flink.api.java.tuple.Tuple2[Long, Long]

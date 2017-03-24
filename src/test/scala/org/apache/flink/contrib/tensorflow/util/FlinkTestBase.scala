@@ -3,6 +3,7 @@ package org.apache.flink.contrib.tensorflow.util
 import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster
 import org.apache.flink.streaming.util.TestStreamEnvironment
 import org.apache.flink.test.util.{TestBaseUtils, TestEnvironment}
+import org.junit.rules.TemporaryFolder
 import org.scalatest.{BeforeAndAfter, Suite}
 
 // Copied from Apache Flink.
@@ -39,16 +40,16 @@ trait FlinkTestBase extends BeforeAndAfter {
   var cluster: Option[LocalFlinkMiniCluster] = None
   val parallelism = 4
 
+  protected val tempFolder = new TemporaryFolder()
+
   before {
+    tempFolder.create()
     val cl = TestBaseUtils.startCluster(
       1,
       parallelism,
       false,
       false,
       true)
-
-//    val clusterEnvironment = new TestEnvironment(cl, parallelism)
-//    clusterEnvironment.setAsContext()
 
     TestStreamEnvironment.setAsContext(cl, parallelism)
 
@@ -58,6 +59,7 @@ trait FlinkTestBase extends BeforeAndAfter {
   after {
     TestStreamEnvironment.unsetAsContext()
     cluster.foreach(c => TestBaseUtils.stopCluster(c, TestBaseUtils.DEFAULT_TIMEOUT))
+    tempFolder.delete()
   }
 
 }

@@ -7,11 +7,11 @@ import com.twitter.bijection.Inversion.attemptWhen
 import com.twitter.bijection._
 import com.twitter.bijection.protobuf.ProtobufCodec
 import org.apache.flink.api.common.typeinfo.{TypeHint, TypeInformation}
-import org.apache.flink.contrib.tensorflow.TFUtils
 import org.tensorflow.{DataType, Tensor}
 import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
-import org.apache.flink.contrib.tensorflow.types.Rank.`2D`
+import org.tensorflow.contrib.scala.Rank._
 import org.apache.flink.api.scala._
+import org.apache.flink.contrib.tensorflow.util.TFUtils
 
 import scala.reflect.ClassTag
 import scala.reflect.classTag
@@ -27,16 +27,6 @@ object TensorInjections
   with TensorValue2TensorInjections
   with Message2TensorInjections {
 
-  //  type InputLike[T] = Conversion[T,Tensor @@ Rep[T]]
-  //  type OutputLike[T] = Conversion[Tensor @@ Rep[T],T]
-
-//  type InputLike2[T] = Injection[T, Tensor @@ Rep[T]]
-//  type OutputLike2[T] = Injection[Tensor @@ Rep[T], T]
-//
-//  type InputLike[T] = Injection[T, Tensor]
-//  type OutputLike[T] = Injection[Tensor, T]
-//
-//  type TensorLike[T] = Injection[T, Tensor]
 }
 
 trait Message2TensorInjections {
@@ -152,20 +142,6 @@ trait TensorValue2TensorInjections {
         attemptWhen(t)(t => isK && t.dataType()==DataType.INT32) { t =>
           // TODO(eronwright) - use IntBuffer
           TensorValue.fromTensor[K, Int](t)
-        }
-      }
-    }
-
-  /**
-    * Convert a [[TensorValue]] of [[ByteString]] to a [[Tensor]].
-    */
-  implicit def byteStringTensorValue2Tensor[K <: FlinkTuple : ClassTag]: Injection[TensorValue[K,ByteString],Tensor] =
-    new AbstractInjection[TensorValue[K,ByteString],Tensor] {
-      def apply(t: TensorValue[K,ByteString]) = t.toTensor
-      override def invert(t: Tensor): Try[TensorValue[K,ByteString]] = {
-        val isK = classTag[K].runtimeClass == FlinkTuple.getTupleClass(t.shape().length)
-        attemptWhen(t)(t => isK && t.dataType()==DataType.STRING) { t =>
-          TensorValue.fromTensor[K, ByteString](t)
         }
       }
     }
