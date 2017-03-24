@@ -16,6 +16,28 @@ import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._
 
+sealed trait LabelMethod extends ModelMethod {
+  def name = LABEL_METHOD_NAME
+  override type IN = ImageTensor
+  override type OUT = LabelTensor
+}
+
+@SerialVersionUID(1L)
+object LabelMethod {
+  val LABEL_METHOD_NAME = "inception/label"
+  val LABEL_INPUTS = "inputs"
+  val LABEL_OUTPUTS = "outputs"
+
+  /**
+    * Labels a tensor of normalized images as a tensor of labels (confidence scores).
+    * @return the labels as a [[LabelTensor]]
+    */
+  implicit val impl = new LabelMethod {
+    override def inputs(i: ImageTensor): Map[String, Tensor] = Map(LABEL_INPUTS -> i)
+    override def outputs(o: Map[String, Tensor]): LabelTensor = o(LABEL_OUTPUTS).taggedAs[LabelTensor]
+  }
+}
+
 /**
   * Infers labels for images.
   *
@@ -43,29 +65,6 @@ class InceptionModel(modelPath: URI) extends GenericModel[InceptionModel] {
     * Infers labels for an image.
     */
   def label = ModelFunction[LabelMethod](session, signatureDef)
-}
-
-sealed trait LabelMethod extends ModelMethod {
-  def name = LABEL_METHOD_NAME
-}
-
-@SerialVersionUID(1L)
-object LabelMethod {
-  val LABEL_METHOD_NAME = "inception/label"
-  val LABEL_INPUTS = "inputs"
-  val LABEL_OUTPUTS = "outputs"
-
-  /**
-    * Labels a tensor of normalized images as a tensor of labels (confidence scores).
-    * @param input the images as a [[ImageTensor]]
-    * @return the labels as a [[LabelTensor]]
-    */
-  implicit def fromImages(input: ImageTensor) =
-    new LabelMethod {
-      type Result = LabelTensor
-      def inputs(): Map[String, Tensor] = Map(LABEL_INPUTS -> input)
-      def outputs(o: Map[String, Tensor]): Result = o(LABEL_OUTPUTS).taggedAs[LabelTensor]
-    }
 }
 
 object InceptionModel {

@@ -11,6 +11,26 @@ import org.tensorflow._
 import org.tensorflow.contrib.scala._
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
+sealed trait ImageNormalizationMethod extends ModelMethod {
+  val name = NORMALIZE_METHOD_NAME
+  override type IN = ImageFileTensor
+  override type OUT = ImageTensor
+}
+
+object ImageNormalizationMethod {
+  val NORMALIZE_METHOD_NAME = "inception/normalize"
+  val NORMALIZE_INPUTS = "inputs"
+  val NORMALIZE_OUTPUTS = "outputs"
+
+  /**
+    * Normalizes a vector of image files to a vector of images.
+    */
+  implicit val impl = new ImageNormalizationMethod {
+    def inputs(i: IN): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> i)
+    def outputs(o: Map[String, Tensor]): OUT = o(NORMALIZE_OUTPUTS).taggedAs[ImageTensor]
+  }
+}
+
 /**
   * Decodes and normalizes a JPEG image (as a byte[]) as a 4D tensor.
   *
@@ -72,27 +92,4 @@ object ImageNormalization {
   private[inception] val LOG: Logger = LoggerFactory.getLogger(classOf[ImageNormalization])
 
   private[inception] val INPUT_IMAGE_TEMPLATE: Array[Byte] = new Array[Byte](86412)
-
-}
-
-sealed trait ImageNormalizationMethod extends ModelMethod {
-  val name = NORMALIZE_METHOD_NAME
-}
-
-object ImageNormalizationMethod {
-  val NORMALIZE_METHOD_NAME = "inception/normalize"
-  val NORMALIZE_INPUTS = "inputs"
-  val NORMALIZE_OUTPUTS = "outputs"
-
-  /**
-    * Normalizes a vector of image files to a vector of images.
-    * @param input the images as a [[ImageFileTensor]]
-    * @return the image data as a [[ImageTensor]]
-    */
-  implicit def fromByteString(input: ImageFileTensor) =
-    new ImageNormalizationMethod {
-      type Result = ImageTensor
-      def inputs(): Map[String, Tensor] = Map(NORMALIZE_INPUTS -> input)
-      def outputs(o: Map[String, Tensor]): Result = o(NORMALIZE_OUTPUTS).taggedAs[ImageTensor]
-    }
 }

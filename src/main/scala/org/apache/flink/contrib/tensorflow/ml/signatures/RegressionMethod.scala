@@ -8,6 +8,7 @@ import org.tensorflow.Tensor
 import org.tensorflow.contrib.scala._
 import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.example.Example
+import RegressionMethod._
 
 /**
   * The standard regression signature.
@@ -16,6 +17,8 @@ import org.tensorflow.example.Example
   */
 sealed trait RegressionMethod extends ModelMethod {
   val name = REGRESS_METHOD_NAME
+  override type IN = ExampleTensor
+  override type OUT = PredictionTensor
 }
 
 object RegressionMethod {
@@ -24,14 +27,11 @@ object RegressionMethod {
 
   /**
     * Predict a vector of values from a given vector of examples.
-    * @param input the examples as a 2-D tensor of [[Example]]s.
-    * @return a 2-D tensor of [[Float]]s with dimensions [-1,1]
     */
-  implicit def fromExampleTensor(input: ExampleTensor) =
-    new RegressionMethod {
-      type Result = PredictionTensor
-      def inputs(): Map[String, Tensor] = Map(REGRESS_INPUTS -> input)
-      def outputs(o: Map[String, Tensor]): Result = o(REGRESS_OUTPUTS).taggedAs[PredictionTensor]
-    }
+  implicit val impl = new RegressionMethod {
+    type Result = PredictionTensor
+    def inputs(i: ExampleTensor): Map[String, Tensor] = Map(REGRESS_INPUTS -> i)
+    def outputs(o: Map[String, Tensor]): PredictionTensor = o(REGRESS_OUTPUTS).taggedAs[PredictionTensor]
+  }
 }
 

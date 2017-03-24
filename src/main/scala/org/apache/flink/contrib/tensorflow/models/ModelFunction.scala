@@ -12,16 +12,15 @@ import scala.collection.JavaConverters._
 /**
   * A model function.
   *
-  * @tparam T the method type providing specific input and output type information.
+  * @tparam T the signature providing specific input and output type information.
   */
 trait ModelFunction[T <: ModelMethod] {
   /**
     * Apply the model function to the graph.
     *
-    * @param method the method associated with the computation, including input values.
     * @return the output values as provided by the method.
     */
-  def apply(method: T): ManagedResource[method.Result]
+  def apply(in: T#IN): ManagedResource[T#OUT]
 }
 
 object ModelFunction {
@@ -31,13 +30,14 @@ object ModelFunction {
     *
     * A [[SignatureDef]] binds the function to a specific graph.
     */
-  def apply[T <: ModelMethod](session: Session, signatureDef: SignatureDef): ModelFunction[T] = {
+  def apply[T <: ModelMethod](session: Session, signatureDef: SignatureDef)(implicit method: T): ModelFunction[T] = {
     require(session != null, "a session must be provided")
     require(signatureDef != null, "a signatureDef must be provided")
+    require(method.name == signatureDef.getMethodName)
 
     new ModelFunction[T] {
-      def apply(method: T): ManagedResource[method.Result] = {
-        require(method.name == signatureDef.getMethodName)
+      def apply(in: T#IN): ManagedResource[T#OUT] = {
+        require(in != null, "Input must be provided")
 
         // create a managed resource that lazily runs the graph
         val runResource = new AbstractManagedResource[Session.Run] {
@@ -46,7 +46,7 @@ object ModelFunction {
             val runner = session.runner
 
             // map inputs according to the signaturedef
-            val inputs = method.inputs()
+            val inputs = method.inputs(in.asInstanceOf[method.IN])
             signatureDef.getInputsMap.asScala.foreach { kv =>
               val tensor = inputs.getOrElse(kv._1,
                 throw new IllegalArgumentException(s"An input tensor named ${kv._1} must be provided for this computation."))
