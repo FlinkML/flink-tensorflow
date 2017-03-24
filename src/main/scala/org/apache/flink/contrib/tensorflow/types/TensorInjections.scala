@@ -17,8 +17,7 @@ import scala.util.Try
   * Conversions to/from tensors.
   */
 object TensorInjections
-  extends Commons
-  with Array2TensorInjections
+  extends Array2TensorInjections
   with Scalar2TensorInjections
   with TensorValue2TensorInjections
   with Message2TensorInjections {
