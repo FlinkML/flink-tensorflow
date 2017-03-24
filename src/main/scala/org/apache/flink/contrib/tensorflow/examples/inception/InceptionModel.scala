@@ -3,17 +3,15 @@ package org.apache.flink.contrib.tensorflow.examples.inception
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
-import org.tensorflow.contrib.scala._
-import com.twitter.bijection.Conversion._
 import org.apache.flink.contrib.tensorflow.examples.inception.LabelMethod._
 import org.apache.flink.contrib.tensorflow.graphs.{DefaultGraphLoader, GraphLoader}
 import org.apache.flink.contrib.tensorflow.models.generic.GenericModel
 import org.apache.flink.contrib.tensorflow.models.{ModelFunction, ModelMethod}
-import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.apache.flink.contrib.tensorflow.util.GraphUtils
 import org.apache.flink.core.fs.Path
 import org.slf4j.{Logger, LoggerFactory}
 import org.tensorflow.Tensor
+import org.tensorflow.contrib.scala._
 import org.tensorflow.framework.{SignatureDef, TensorInfo}
 
 import scala.collection.JavaConverters._

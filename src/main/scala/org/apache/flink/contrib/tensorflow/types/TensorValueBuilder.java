@@ -2,7 +2,6 @@ package org.apache.flink.contrib.tensorflow.types;
 
 import org.apache.flink.api.java.tuple.Tuple;
 import org.tensorflow.DataType;
-import org.tensorflow.framework.TensorShapeProto;
 
 import java.nio.*;
 

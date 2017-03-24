@@ -2,11 +2,10 @@ package org.apache.flink.contrib.tensorflow.models.savedmodel
 
 import java.nio.file.Paths
 
+import org.apache.flink.contrib.tensorflow.models.savedmodel.DefaultSavedModelLoader._
 import org.apache.flink.core.fs.{FileSystem, Path}
 import org.tensorflow.SavedModelBundle
 import org.tensorflow.framework.MetaGraphDef
-
-import DefaultSavedModelLoader._
 
 /**
   * The default saved model loader.

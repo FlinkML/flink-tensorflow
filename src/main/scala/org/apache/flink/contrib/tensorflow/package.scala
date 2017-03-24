@@ -1,10 +1,10 @@
 package org.apache.flink.contrib
 
 import com.twitter.bijection.Bijection
+import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
 import org.apache.flink.contrib.tensorflow.types.TensorValue
 import org.tensorflow.Tensor
 import org.tensorflow.contrib.scala._
-import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
 
 package object tensorflow {
 

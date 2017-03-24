@@ -1,9 +1,7 @@
 package org.apache.flink.contrib.tensorflow.examples
 
-import org.tensorflow.contrib.scala.Rank._
-import org.apache.flink.contrib.tensorflow.types.TensorInjections.ByteString
 import org.apache.flink.contrib.tensorflow.types.TensorValue
-import org.tensorflow.contrib.scala.Tensors._
+import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.contrib.scala._
 
 package object inception {

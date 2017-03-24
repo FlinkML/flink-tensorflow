@@ -8,8 +8,8 @@ import org.apache.flink.contrib.tensorflow.util.TestData
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpecLike}
-import org.tensorflow.{DataType, Tensor}
 import org.tensorflow.example.Example
+import org.tensorflow.{DataType, Tensor}
 
 import scala.util.Success
 

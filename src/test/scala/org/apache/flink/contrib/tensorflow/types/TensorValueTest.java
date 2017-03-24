@@ -5,13 +5,13 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.junit.Test;
 import org.tensorflow.DataType;
 import org.tensorflow.Tensor;
-import org.tensorflow.framework.TensorShapeProto;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for TensorValue.

@@ -1,11 +1,7 @@
 package org.tensorflow.contrib
 
-import com.twitter.bijection.Bijection
-import org.apache.flink.contrib.tensorflow.types.TensorValue
 import com.twitter.bijection._
-import org.tensorflow.Session.Run
-import org.tensorflow.{Graph, Session, Tensor}
-import resource._
+import org.tensorflow.Tensor
 
 package object scala {
 

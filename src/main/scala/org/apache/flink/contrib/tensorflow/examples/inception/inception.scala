@@ -1,17 +1,15 @@
 package org.apache.flink.contrib.tensorflow.examples.inception
 
-import org.tensorflow.contrib.scala._
 import java.nio.file.Paths
 
-import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel.LabeledImage
+import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
 import org.apache.flink.contrib.tensorflow.streaming._
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode.PROCESS_ONCE
 import org.apache.flink.streaming.api.scala._
+import org.tensorflow.contrib.scala._
+import resource._
 
 import scala.concurrent.duration._
-
-import InceptionModel._
-import resource._
 
 /**
   * A streaming image labeler, based on the 'inception5h' model.

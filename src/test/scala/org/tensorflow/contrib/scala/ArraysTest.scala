@@ -1,15 +1,12 @@
 package org.tensorflow.contrib.scala
 
 import com.twitter.bijection.Conversion._
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpecLike}
-import org.tensorflow.Tensor
-import org.tensorflow.example.Example
-import resource._
-import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.contrib.scala.Arrays._
+import org.tensorflow.contrib.scala.Rank._
+import resource._
 
 @RunWith(classOf[JUnitRunner])
 class ArraysTest extends WordSpecLike

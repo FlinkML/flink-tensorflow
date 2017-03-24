@@ -6,17 +6,16 @@ import java.util.Collections
 import com.twitter.bijection.Conversion._
 import org.apache.flink.api.common.io.GlobFilePathFilter
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.contrib.tensorflow._
 import org.apache.flink.contrib.tensorflow.common.functions.util.ModelUtils
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat
 import org.apache.flink.contrib.tensorflow.io.WholeFileInputFormat._
-import org.apache.flink.contrib.tensorflow._
 import org.apache.flink.core.fs.{FSDataInputStream, Path}
 import org.slf4j.{Logger, LoggerFactory}
+import org.tensorflow.contrib.scala.ByteStrings._
+import resource._
 
 import scala.collection.JavaConverters._
-import resource._
-import org.tensorflow.contrib.scala.ByteStrings._
-import org.tensorflow.contrib.scala.Tensors._
 
 /**
   * Input format for images.

@@ -1,29 +1,26 @@
 package org.apache.flink.contrib.tensorflow.ml
 
-import org.apache.flink.api.common.functions.{RichFlatMapFunction, RichMapFunction}
+import com.twitter.bijection.Conversion._
+import org.apache.flink.api.common.functions.RichFlatMapFunction
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod._
+import org.apache.flink.contrib.tensorflow.types.TensorInjections.{message2Tensor, messages2Tensor}
 import org.apache.flink.contrib.tensorflow.util.TestData._
-import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils, TestData}
+import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils}
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.util.Collector
 import org.apache.flink.util.Preconditions.checkState
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpecLike}
-import org.tensorflow.example.Example
-import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod._
 import org.tensorflow.Tensor
-import com.twitter.bijection.Conversion._
-import com.twitter.bijection._
-import org.apache.flink.contrib.tensorflow.types.TensorInjections.message2Tensor
-import org.apache.flink.contrib.tensorflow.types.TensorInjections.messages2Tensor
-import org.apache.flink.contrib.tensorflow.types.TensorValue
-import org.apache.flink.util.Collector
-import resource._
-import org.tensorflow.contrib.scala._
-import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.contrib.scala.Arrays._
+import org.tensorflow.contrib.scala.Rank._
+import org.tensorflow.contrib.scala._
+import org.tensorflow.example.Example
+import resource._
 
 @RunWith(classOf[JUnitRunner])
 class RegressITCase extends WordSpecLike

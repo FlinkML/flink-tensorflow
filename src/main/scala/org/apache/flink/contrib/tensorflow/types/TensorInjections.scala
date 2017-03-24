@@ -6,15 +6,11 @@ import com.google.protobuf.Message
 import com.twitter.bijection.Inversion.attemptWhen
 import com.twitter.bijection._
 import com.twitter.bijection.protobuf.ProtobufCodec
-import org.apache.flink.api.common.typeinfo.{TypeHint, TypeInformation}
-import org.tensorflow.{DataType, Tensor}
 import org.apache.flink.api.java.tuple.{Tuple => FlinkTuple}
-import org.tensorflow.contrib.scala.Rank._
-import org.apache.flink.api.scala._
 import org.apache.flink.contrib.tensorflow.util.TFUtils
+import org.tensorflow.{DataType, Tensor}
 
-import scala.reflect.ClassTag
-import scala.reflect.classTag
+import scala.reflect.{ClassTag, classTag}
 import scala.util.Try
 
 /**

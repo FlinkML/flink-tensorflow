@@ -18,7 +18,7 @@
 package org.apache.flink.contrib.tensorflow.types;
 
 import org.apache.flink.annotation.Public;
-import org.apache.flink.api.java.tuple.*;
+import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.contrib.tensorflow.util.TFUtils;
 import org.apache.flink.core.io.VersionMismatchException;
 import org.apache.flink.core.memory.DataInputView;

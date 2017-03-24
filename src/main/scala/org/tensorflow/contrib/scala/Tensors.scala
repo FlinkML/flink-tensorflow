@@ -1,13 +1,6 @@
 package org.tensorflow.contrib.scala
 
-import java.nio.FloatBuffer
-
-import com.twitter.bijection._
-import org.apache.flink.api.java.tuple.Tuple
-import org.apache.flink.contrib.tensorflow.types.TensorValue
-import org.tensorflow.{DataType, Tensor}
-import org.tensorflow.contrib.scala._
-import org.tensorflow.contrib.scala.Rank._
+import org.tensorflow.Tensor
 import resource.Resource
 
 /**

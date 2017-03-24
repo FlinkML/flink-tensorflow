@@ -2,7 +2,6 @@ package org.tensorflow.contrib.scala
 
 import java.nio.{DoubleBuffer, FloatBuffer, IntBuffer, LongBuffer}
 
-import org.tensorflow.contrib.scala._
 import com.twitter.bijection.Bijection
 import org.apache.flink.api.java.tuple.Tuple
 import org.tensorflow.Tensor

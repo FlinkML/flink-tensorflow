@@ -1,16 +1,10 @@
 package org.apache.flink.contrib.tensorflow.io
 
-import org.apache.flink.api.common.io.BinaryInputFormat
+import java.io.{EOFException, IOException, InputStream}
+
 import org.apache.flink.api.common.io.FileInputFormat
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.core.fs._
-import org.apache.flink.types.Row
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.{EOFException, FileInputStream, IOException, InputStream}
-import java.util.ArrayList
-import java.util.List
-
 import org.apache.flink.util.Preconditions.checkState
 
 /**

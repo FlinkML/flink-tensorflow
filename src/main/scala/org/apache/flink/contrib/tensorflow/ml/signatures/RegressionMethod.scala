@@ -1,17 +1,13 @@
 package org.apache.flink.contrib.tensorflow.ml.signatures
 
-import com.twitter.bijection.Conversion._
+import com.twitter.bijection._
 import org.apache.flink.contrib.tensorflow.models.ModelMethod
 import org.apache.flink.contrib.tensorflow.models.savedmodel.SignatureConstants._
-import org.tensorflow.contrib.scala.Rank.`2D`
 import org.apache.flink.contrib.tensorflow.types.TensorInjections._
 import org.tensorflow.Tensor
-import org.tensorflow.example.Example
 import org.tensorflow.contrib.scala._
-import com.twitter.bijection.Conversion._
-import com.twitter.bijection._
-import RegressionMethod._
-import resource.ManagedResource
+import org.tensorflow.contrib.scala.Rank._
+import org.tensorflow.example.Example
 
 /**
   * The standard regression signature.

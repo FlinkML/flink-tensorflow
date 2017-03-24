@@ -4,19 +4,16 @@ import java.nio.file.Paths
 
 import org.apache.flink.cep.scala.CEP
 import org.apache.flink.cep.scala.pattern.Pattern
-import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel.LabeledImage
+import org.apache.flink.contrib.tensorflow.examples.inception.InceptionModel._
 import org.apache.flink.contrib.tensorflow.streaming._
 import org.apache.flink.streaming.api.functions.source.FileProcessingMode._
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.windowing.time.Time
+import org.tensorflow.contrib.scala._
+import resource._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import InceptionModel._
-
-import org.apache.flink.contrib.tensorflow.examples.inception._
-import org.tensorflow.contrib.scala._
-import resource._
 
 /**
   * Identifies specific image sequences, based on the 'inception5h' model.

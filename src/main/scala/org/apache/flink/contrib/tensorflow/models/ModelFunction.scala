@@ -1,16 +1,13 @@
 package org.apache.flink.contrib.tensorflow.models
 
 
-import java.util
-import java.util.Map
-
 import org.apache.flink.contrib.tensorflow.types.TensorName
-import org.tensorflow.{Session, Tensor}
+import org.tensorflow.Session
 import org.tensorflow.Session.Run
 import org.tensorflow.framework.SignatureDef
+import resource._
 
 import scala.collection.JavaConverters._
-import resource._
 
 /**
   * A model function.

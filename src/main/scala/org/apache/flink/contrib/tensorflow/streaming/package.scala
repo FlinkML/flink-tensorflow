@@ -3,7 +3,7 @@ package org.apache.flink.contrib.tensorflow
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.contrib.tensorflow.common.functions.AbstractMapFunction
 import org.apache.flink.contrib.tensorflow.models.Model
-import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.scala.DataStream
 
 import scala.reflect.ClassTag
 

@@ -1,8 +1,7 @@
 package org.tensorflow.contrib.scala
 
-import Tensors._
 import com.twitter.bijection.Bijection
-import Rank._
+import org.tensorflow.contrib.scala.Rank._
 import org.tensorflow.{DataType, Tensor}
 
 /**

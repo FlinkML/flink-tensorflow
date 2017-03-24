@@ -1,15 +1,11 @@
 package org.apache.flink.contrib.tensorflow.io
 
-import java.io.File
-
 import org.apache.flink.contrib.tensorflow.models.savedmodel.DefaultSavedModelLoader
 import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils}
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
-import org.scalatest.junit.{JUnitRunner, JUnitSuite}
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpecLike}
 import org.tensorflow.{Session, Tensor}
 
