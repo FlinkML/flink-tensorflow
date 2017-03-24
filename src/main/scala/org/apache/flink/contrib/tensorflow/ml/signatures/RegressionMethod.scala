@@ -19,7 +19,7 @@ sealed trait RegressionMethod extends ModelMethod {
 }
 
 object RegressionMethod {
-  type ExampleTensor = TypedTensor[`2D`, ByteStr[Example]]
+  type ExampleTensor = TypedTensor[`2D`, ByteString[Example]]
   type PredictionTensor = TypedTensor[`2D`,Float]
 
   /**

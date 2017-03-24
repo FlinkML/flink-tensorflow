@@ -10,7 +10,7 @@ package object scala {
     *
     * @tparam T the embedded type that the bytestring represents.
     */
-  type ByteStr[T] = Array[Byte] @@ T
+  type ByteString[T] = Array[Byte] @@ T
 
   /**
     * Tensor tagging support, to associate rank and datatype information with a tensor

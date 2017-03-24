@@ -21,7 +21,7 @@ package object inception {
   /**
     * A 0-D tensor containing an image file.
     */
-  type ImageFileTensor = TypedTensor[`0D`, ByteStr[ImageFile]]
+  type ImageFileTensor = TypedTensor[`0D`, ByteString[ImageFile]]
 
   /**
     * A set of labels encoded a 2-D tensor of floats.

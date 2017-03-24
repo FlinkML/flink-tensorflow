@@ -17,14 +17,14 @@ object ByteStrings {
   import scala.languageFeature.implicitConversions
 
   /**
-    * Convert a [[ByteStr]] to a 0-D [[TypedTensor]].
+    * Convert a [[ByteString]] to a 0-D [[TypedTensor]].
     */
-  implicit def byteString2Tensor[T]: Bijection[ByteStr[T], TypedTensor[`0D`, ByteStr[T]]] =
-    Bijection.build[ByteStr[T], TypedTensor[`0D`, ByteStr[T]]] { str =>
-      Tensor.create(str: Array[Byte]).taggedWith[`0D`, ByteStr[T]]
+  implicit def byteString2Tensor[T]: Bijection[ByteString[T], TypedTensor[`0D`, ByteString[T]]] =
+    Bijection.build[ByteString[T], TypedTensor[`0D`, ByteString[T]]] { str =>
+      Tensor.create(str: Array[Byte]).taggedWith[`0D`, ByteString[T]]
     } { t =>
       assert(t.dataType() == DataType.STRING)
-      t.bytesValue().asInstanceOf[ByteStr[T]]
+      t.bytesValue().asInstanceOf[ByteString[T]]
     }
 
   /**
@@ -34,6 +34,6 @@ object ByteStrings {
     /**
       * View this byte array as a byte string representing an instance of [[T]].
       */
-    def asByteString[T] = array.asInstanceOf[ByteStr[T]]
+    def asByteString[T] = array.asInstanceOf[ByteString[T]]
   }
 }
