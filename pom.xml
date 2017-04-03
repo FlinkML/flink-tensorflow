@@ -35,7 +35,7 @@ under the License.
 
 	<modules>
 		<module>flink-tensorflow</module>
-<!--		<module>flink-tensorflow-examples</module>-->
+		<module>flink-tensorflow-examples</module>
 	</modules>
 
     <repositories>
@@ -49,9 +49,34 @@ under the License.
 		</repository>
 	</repositories>
     
-	<properties>
+    <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<flink.version>1.2.0</flink.version>
+		<asm.version>5.0.4</asm.version>
+		<tf.version>1.0.1</tf.version>
+		<slf4j.version>1.7.7</slf4j.version>
+		<log4j.version>1.2.17</log4j.version>
+        <arm.version>2.0</arm.version>
+        <bijection.version>0.9.5</bijection.version>
+        <protobuf.version>3.1.0</protobuf.version>
+        <chill.version>0.8.1</chill.version>
+		<junit.version>4.12</junit.version>
+        <scalatest.version>2.2.2</scalatest.version>
+		<mockito.version>1.10.19</mockito.version>
+		<powermock.version>1.6.5</powermock.version>
+        <hamcrest.version>1.3</hamcrest.version>
+		<scala.binary.version>2.11</scala.binary.version>
 	</properties>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.0.0</version>
+			</plugin>
+		</plugins>
+	</build>
 	<dependencyManagement>
 		<dependencies>
 		</dependencies>

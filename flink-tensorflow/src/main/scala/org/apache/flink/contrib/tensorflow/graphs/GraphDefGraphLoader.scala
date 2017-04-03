@@ -1,7 +1,7 @@
 package org.apache.flink.contrib.tensorflow.graphs
 
-import org.apache.flink.contrib.tensorflow.examples.common.GraphBuilder
 import org.tensorflow.Graph
+import org.tensorflow.contrib.scala.Graphs
 import org.tensorflow.framework.GraphDef
 
 /**
@@ -12,7 +12,5 @@ import org.tensorflow.framework.GraphDef
 @SerialVersionUID(1L)
 class GraphDefGraphLoader(graphDef: GraphDef, prefix: String = "")
   extends GraphLoader with Serializable {
-  override def load(): Graph = {
-    GraphBuilder.fromGraphDef(graphDef, prefix)
-  }
+  override def load(): Graph = Graphs.load(graphDef)
 }
