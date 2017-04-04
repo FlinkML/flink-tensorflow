@@ -7,7 +7,7 @@ cache:
 sudo: false
 
 before_install:
-  - bash install-protobuf.sh
+  - bash tools/install-protobuf.sh
 
 before_script:
   - ls -R $HOME/protobuf
