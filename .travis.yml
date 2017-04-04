@@ -3,12 +3,10 @@ language: java
 cache:
   directories:
   - $HOME/protobuf
+  - $HOME/.m2
 
 sudo: false
 
 before_install:
   - bash tools/install-protobuf.sh
-
-before_script:
-  - ls -R $HOME/protobuf
-
+  - export PATH=$HOME/protobuf/bin:$PATH
