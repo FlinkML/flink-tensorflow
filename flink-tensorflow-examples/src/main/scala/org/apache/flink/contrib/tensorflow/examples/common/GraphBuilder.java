@@ -1,12 +1,8 @@
 package org.apache.flink.contrib.tensorflow.examples.common;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.tensorflow.DataType;
-import org.tensorflow.Graph;
-import org.tensorflow.Output;
-import org.tensorflow.Tensor;
+import org.tensorflow.*;
 import org.tensorflow.framework.GraphDef;
-import org.tensorflow.framework.TensorShapeProto;
 
 /**
  * A graph builder.
@@ -20,10 +16,6 @@ public class GraphBuilder implements AutoCloseable {
 
 	public GraphBuilder() {
 		this.g = new Graph();
-	}
-
-	public GraphBuilder(Graph graph) {
-		this.g = graph;
 	}
 
 	public Output div(Output x, Output y) {
@@ -64,44 +56,18 @@ public class GraphBuilder implements AutoCloseable {
 		}
 	}
 
-	Output variable(String name, DataType dtype, TensorShapeProto shape) {
+	Output variable(String name, DataType dtype, Shape shape) {
 		return g.opBuilder("Variable", name)
 			.setAttr("dtype", dtype)
-//			.setAttr("shape", shape)
+			.setAttr("shape", shape)
 			.build()
 			.output(0);
 	}
 
-	public Output placeholder(String name, DataType dtype, TensorShapeProto shape) {
-		/**
-		 REGISTER_OP("PlaceholderV2")
-		 .Output("output: dtype")
-		 .Attr("dtype: type")
-		 .Attr("shape: shape")
-		 .SetShapeFn([](InferenceContext* c) {
-		 TensorShapeProto shape;
-		 TF_RETURN_IF_ERROR(c->GetAttr("shape", &shape));
-		 ShapeHandle output;
-		 TF_RETURN_IF_ERROR(c->MakeShapeFromShapeProto(shape, &output));
-		 c->set_output(0, output);
-		 return Status::OK();
-		 })
-		 .Doc(R"doc(
-		 A placeholder op for a value that will be fed into the computation.
-
-		 N.B. This operation will fail with an error if it is executed. It is
-		 intended as a way to represent a value that will always be fed, and to
-		 provide attrs that enable the fed value to be checked at runtime.
-
-		 output: A placeholder tensor that must be replaced using the feed mechanism.
-		 dtype: The type of elements in the tensor.
-		 shape: The shape of the tensor. The shape can be any partially-specified
-		 shape.  To be unconstrained, pass in a shape with unknown rank.
-		 )doc");
-		 */
+	public Output placeholder(String name, DataType dtype, Shape shape) {
 		return g.opBuilder("PlaceholderV2", name)
 			.setAttr("dtype", dtype)
-//			.setAttr("shape", shape)
+			.setAttr("shape", shape)
 			.build()
 			.output(0);
 	}
@@ -130,11 +96,5 @@ public class GraphBuilder implements AutoCloseable {
 		if(g !=null) {
 			g.close();
 		}
-	}
-
-	public static Graph fromGraphDef(GraphDef graphDef, String prefix) {
-		Graph g = new Graph();
-		g.importGraphDef(graphDef.toByteArray(), prefix);
-		return g;
 	}
 }
