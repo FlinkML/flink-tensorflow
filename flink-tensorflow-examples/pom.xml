@@ -132,7 +132,7 @@ under the License.
 		<!-- TensorFlow dependencies -->
 		<dependency>
 			<groupId>org.tensorflow</groupId>
-			<artifactId>libtensorflow</artifactId>
+			<artifactId>tensorflow</artifactId>
 			<version>${tf.version}</version>
 		</dependency>
 		<dependency>
@@ -376,6 +376,10 @@ under the License.
 									<exclude>com.github.scopt:scopt_*</exclude>
 									<exclude>commons-io:commons-io</exclude>
 									<exclude>commons-cli:commons-cli</exclude>
+
+									<!-- Also exclude transitive dependencies of other libraries -->
+									<exclude>org.scala-lang:scala-library</exclude>
+
 								</excludes>
 							</artifactSet>
 							<filters>
@@ -407,6 +411,12 @@ under the License.
 								</transformer>
 							</transformers>
 						    -->
+							<relocations>
+								<relocation>
+									<pattern>com.google.protobuf</pattern>
+									<shadedPattern>com.apache.flink.contrib.tensorflow.org.google.protobuf</shadedPattern>
+								</relocation>
+							</relocations>
 							<createDependencyReducedPom>true</createDependencyReducedPom>
 						</configuration>
 					</execution>
