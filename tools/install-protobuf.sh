@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
-# check to see if protobuf folder is empty
+
+# purpose: install protoc
+# used in .travis.yml
+
 if [ ! -d "$HOME/protobuf/lib" ]; then
   wget -q https://github.com/google/protobuf/releases/download/v3.0.0/protobuf-java-3.0.0.zip
   unzip -q -o protobuf-java-3.0.0
