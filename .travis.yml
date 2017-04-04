@@ -1,2 +1,14 @@
 language: java
 
+cache:
+  directories:
+  - $HOME/protobuf
+
+sudo: false
+
+before_install:
+  - bash install-protobuf.sh
+
+before_script:
+  - ls -R $HOME/protobuf
+
