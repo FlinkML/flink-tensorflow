@@ -3,18 +3,13 @@
 
 ## Building
 
-### Build TensorFlow
-
-Please refer to TensorFlow for general instructions.
-
-Additional steps are required to use the new TensorFlow Java library.  Here's how to
-build and install the library to the local Maven repository:
-
+## Build Example
+A set of examples are provided as a ready-to-run JAR file.   To build:
 ```sh
-$ cd $TENSORFLOW_HOME
-$ bazel build //tensorflow/java:tensorflow //tensorflow/java:pom
-mvn install:install-file -Dfile=bazel-bin/tensorflow/java/libtensorflow.jar -DpomFile=bazel-bin/tensorflow/java/pom.xml
+$ mvn clean package
 ```
+
+The build file is located at: `flink-tensorflow-examples/target/flink-tensorflow-examples_2.11-0.1-SNAPSHOT.jar`
 
 ### Run Tests
 The project uses JUnit and the Maven Surefire plugin.  Be sure to add the
@@ -23,6 +18,15 @@ the native tensorflow library to the Java native library path.
 To run the tests:
  
 ```sh
-$ mvn surefire:test -DargLine="-Djava.library.path=$TF_HOME/bazel-bin/tensorflow/java"
+$ mvn surefire:test
 ```
 
+## Running the Examples
+_Prerequisite: install and run Apache Flink 1.2._
+
+### Inception
+1. Download the inception5h model.
+2. Launch the inception demo:
+```
+$ flink run -c org.apache.flink.contrib.tensorflow.examples.inception.Inception flink-tensorflow-examples/target/flink-tensorflow-examples_2.11-0.1-SNAPSHOT.jar <path-to-inception5h> <path-to-image-files>
+```
