@@ -1,5 +1,7 @@
 # flink-tensorflow
 
+[![Build Status](https://api.travis-ci.org/cookieai/flink-tensorflow.png?branch=master)](https://travis-ci.org/cookieai/flink-tensorflow)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flink-tensorflow/Lobby)
 
 ## Building
 
