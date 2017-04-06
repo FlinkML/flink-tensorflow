@@ -1,9 +1,9 @@
 package org.apache.flink.contrib.tensorflow.models.savedmodel
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths, Path => NioPath}
 
-import org.apache.flink.contrib.tensorflow.models.savedmodel.DefaultSavedModelLoader._
 import org.apache.flink.core.fs.{FileSystem, Path}
+import org.apache.flink.runtime.filecache.FileCache
 import org.tensorflow.SavedModelBundle
 import org.tensorflow.framework.MetaGraphDef
 
@@ -21,10 +21,7 @@ class DefaultSavedModelLoader(exportPath: Path, tags: String*)
 
   override lazy val metagraph: MetaGraphDef = {
     // TODO(eronwright) load metagraph directly (rather than loading the full bundle)
-
-    // TODO(eronwright) support remote paths
-    val localPath = Paths.get(resolve(exportPath).toUri)
-    val bundle = SavedModelBundle.load(localPath.toString, tags:_*)
+    val bundle = DefaultSavedModelLoader.load(exportPath, true, tags:_*)
     try {
       MetaGraphDef.parseFrom(bundle.metaGraphDef())
     }
@@ -34,14 +31,41 @@ class DefaultSavedModelLoader(exportPath: Path, tags: String*)
   }
 
   override def load(): SavedModelBundle = {
-    // TODO(eronwright) support remote paths
-    val localPath = Paths.get(resolve(exportPath).toUri)
-    SavedModelBundle.load(localPath.toString, tags:_*)
+    DefaultSavedModelLoader.load(exportPath, true, tags:_*)
   }
 }
 
 object DefaultSavedModelLoader {
+
+  private[tensorflow] def load(exportPath: Path, optimize: Boolean, tags: String*): SavedModelBundle = {
+    val remotePath = resolve(exportPath)
+    val localPath: NioPath = remotePath.toUri match {
+      case uri if optimize && uri.getScheme == "file" =>
+        // optimization: use local path directly
+        Paths.get(uri)
+      case _ =>
+        // copy the model from the distributed fs to the local fs
+        val tempDir = Files.createTempDirectory("model-")
+        Files.deleteIfExists(tempDir)
+        val tempPath = new Path(tempDir.toUri)
+        copy(remotePath, tempPath)
+        deleteOnExit(tempPath)
+        tempDir
+    }
+    SavedModelBundle.load(localPath.toString, tags:_*)
+  }
+
   private[tensorflow] def resolve(path: Path): Path = {
-    new Path(FileSystem.getLocalFileSystem.getWorkingDirectory, path)
+    path.makeQualified(FileSystem.get(path.toUri))
+  }
+
+  private[tensorflow] def copy(sourcePath: Path, targetPath: Path): Unit = {
+    FileCache.copy(sourcePath, targetPath, false)
+  }
+
+  private[tensorflow] def deleteOnExit(path: Path): Unit = {
+    sys.ShutdownHookThread {
+      path.getFileSystem.delete(path, true)
+    }
   }
 }
