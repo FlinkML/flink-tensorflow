@@ -7,7 +7,7 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 /**
   * A mix-in for streaming functions to support model checkpointing.
   */
-trait FunctionModelCheckpointOperations {
+trait CheckpointedModelAwareFunction {
   this: CheckpointedFunction =>
 
   /**
