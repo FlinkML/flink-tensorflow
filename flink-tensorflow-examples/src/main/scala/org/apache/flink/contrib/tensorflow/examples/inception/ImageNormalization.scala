@@ -53,10 +53,7 @@ class ImageNormalization extends GenericModel[ImageNormalization] {
       val mean: Float = 117f
       val scale: Float = 1f
 
-      // Since the graph is being constructed once per execution here, we can use a constant for the
-      // input image. If the graph were to be re-used for multiple input images, a placeholder would
-      // have been more appropriate.
-      val input: Output = b.constant("input", INPUT_IMAGE_TEMPLATE)
+      val input: Output = b.placeholder("input", DataType.STRING, Shape.scalar())
       val output: Output = b.div(
         b.sub(
           b.resizeBilinear(
@@ -91,5 +88,4 @@ object ImageNormalization {
 
   private[inception] val LOG: Logger = LoggerFactory.getLogger(classOf[ImageNormalization])
 
-  private[inception] val INPUT_IMAGE_TEMPLATE: Array[Byte] = new Array[Byte](86412)
 }
