@@ -45,6 +45,10 @@ trait Saver {
 
 }
 
+object Saver {
+  def apply(saverDef: SaverDef): Saver = new DefaultSaver(saverDef)
+}
+
 /**
   * A Saver implementation based on a [[SaverDef]].
   */
