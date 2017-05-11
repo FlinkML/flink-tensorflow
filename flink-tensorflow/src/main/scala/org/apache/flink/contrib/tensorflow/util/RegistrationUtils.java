@@ -70,7 +70,7 @@ public class RegistrationUtils {
 		config.registerTypeWithKryoSerializer(MemoryLogRawAllocation.class, ProtobufSerializer.class);
 		config.registerTypeWithKryoSerializer(SummaryDescription.class, ProtobufSerializer.class);
 		config.registerTypeWithKryoSerializer(Summary.Value.class, ProtobufSerializer.class);
-		config.registerTypeWithKryoSerializer(FunctionDef.Node.class, ProtobufSerializer.class);
+//		config.registerTypeWithKryoSerializer(FunctionDef.Node.class, ProtobufSerializer.class);
 		config.registerTypeWithKryoSerializer(DeviceStepStats.class, ProtobufSerializer.class);
 		config.registerTypeWithKryoSerializer(MemoryLogTensorOutput.class, ProtobufSerializer.class);
 		config.registerTypeWithKryoSerializer(AttrValue.class, ProtobufSerializer.class);
