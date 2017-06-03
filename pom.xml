@@ -51,8 +51,8 @@ under the License.
     
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<tf.version>1.1.0</tf.version>
-		<flink.version>1.2.0</flink.version>
+		<tf.version>1.2.0-rc1</tf.version>
+		<flink.version>1.2.1</flink.version>
 		<asm.version>5.0.4</asm.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<log4j.version>1.2.17</log4j.version>
