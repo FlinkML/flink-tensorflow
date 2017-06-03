@@ -7,7 +7,7 @@ import org.apache.flink.configuration.Configuration
 import org.apache.flink.contrib.tensorflow.ml.signatures.RegressionMethod._
 import org.apache.flink.contrib.tensorflow.types.TensorInjections.{message2Tensor, messages2Tensor}
 import org.apache.flink.contrib.tensorflow.util.TestData._
-import org.apache.flink.contrib.tensorflow.util.{ExampleBuilder, RegistrationUtils}
+import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils}
 import org.apache.flink.core.fs.Path
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.util.Collector
