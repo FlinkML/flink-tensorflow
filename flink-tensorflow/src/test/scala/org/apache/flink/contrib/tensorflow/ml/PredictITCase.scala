@@ -4,7 +4,6 @@ import com.twitter.bijection.Conversion._
 import org.apache.flink.api.common.functions.RichFlatMapFunction
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
-import org.apache.flink.contrib.tensorflow.ml.signatures.PredictionMethod._
 import org.apache.flink.contrib.tensorflow.types.{TensorValue, TensorValueBuilder}
 import org.apache.flink.contrib.tensorflow.util.{FlinkTestBase, RegistrationUtils}
 import org.apache.flink.core.fs.Path
@@ -75,7 +74,7 @@ class PredictITCase extends WordSpecLike
           override def flatMap(value: LabeledImageTensorValue, out: Collector[Int]): Unit = {
 
             for {
-              x <- managed(value._1.toTensor().taggedAs[PredictionInputTensor])
+              x <- managed(value._1.toTensor())
               y <- model.predict(x)
             } {
               // cast as a 1D tensor to use the available conversion

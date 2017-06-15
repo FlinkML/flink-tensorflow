@@ -1,6 +1,6 @@
 package org.apache.flink.contrib.tensorflow.ml
 
-import org.apache.flink.contrib.tensorflow.ml.signatures.{PredictionMethod}
+import org.apache.flink.contrib.tensorflow.ml.signatures.PredictionMethod
 import org.apache.flink.contrib.tensorflow.models.ModelFunction
 import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel
 import org.apache.flink.contrib.tensorflow.models.savedmodel.TensorFlowModel._
