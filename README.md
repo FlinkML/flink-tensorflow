@@ -1,6 +1,6 @@
 # flink-tensorflow
 
-[![Build Status](https://api.travis-ci.org/cookieai/flink-tensorflow.png?branch=master)](https://travis-ci.org/cookieai/flink-tensorflow)
+[![Build Status](https://api.travis-ci.org/FlinkML/flink-tensorflow.png?branch=master)](https://travis-ci.org/FlinkML/flink-tensorflow)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flink-tensorflow/Lobby)
 
 Welcome!  **flink-tensorflow** is a library for machine intelligence in [Apache Flink™](http://flink.apache.org/),
