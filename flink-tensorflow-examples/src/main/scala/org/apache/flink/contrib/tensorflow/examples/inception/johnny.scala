@@ -72,9 +72,9 @@ object Johnny {
     image.labels.exists(l => l._2.equalsIgnoreCase(label) && l._1 >= confidence)
   }
 
-  case class AccessDenied(pattern: mutable.Map[String, LabeledImage])
-  case class AccessGranted(first: LabeledImage, second: LabeledImage, third: LabeledImage) {
-    override def toString: String = s"AccessGranted(${(first.labels.head, second.labels.head, third.labels.head)})"
+  case class AccessDenied(pattern: scala.collection.Map[String, Iterable[LabeledImage]])
+  case class AccessGranted(first: Iterable[LabeledImage], second: Iterable[LabeledImage], third: Iterable[LabeledImage]) {
+    override def toString: String = s"AccessGranted(${(first.last.labels.head, second.last.labels.head, third.last.labels.head)})"
   }
 
 }
